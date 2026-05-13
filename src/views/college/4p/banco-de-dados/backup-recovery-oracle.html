@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Backup e Recovery – Oracle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #160b13;
+            --color-bg-deep: #080407;
+            --color-surface: #2a1320;
+            --color-text: #ffe8f2;
+            --color-text-secondary: #d9b4c2;
+            --color-text-muted: #a98895;
+            --color-accent-1: #ff5c9a;
+            --color-accent-2: #ff8fbd;
+            --color-accent-3: #d6a84f;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.09);
+            --color-vignette: rgba(0,0,0,0.45);
+            --font-display: 'Instrument Serif', serif;
+            --font-body: 'Inter', sans-serif;
+        }
+    </style>
+    <style>
+        :root { --color-bg: #160b13; --color-text: #ffe8f2; --glow-color-rgb: 255,92,154; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { background: var(--color-bg); margin: 0; }
+        body { font-family: var(--font-body); color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+        .deck { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+        .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: clamp(1.2rem, 3vw, 3rem); }
+        .nav-controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; z-index: 100; background: var(--color-glass-bg); backdrop-filter: blur(10px); padding: 8px 22px; border-radius: 40px; border: 1px solid var(--color-glass-border); }
+        .nav-btn { width: 36px; height: 36px; border: none; background: var(--color-glass-bg); color: var(--color-accent-1); border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .nav-btn:hover { background: var(--color-glass-border); }
+        .slide-dots { display: flex; gap: 6px; }
+        .slide-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-glass-border); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+        .slide-dots .dot.active { background: var(--color-accent-1); transform: scale(1.3); }
+        .slide-counter { font-size: 0.75rem; color: var(--color-text-muted); min-width: 36px; text-align: center; }
+        .reveal { opacity: 0; transform: translateY(20px); }
+        .text-glow { text-shadow: 0 0 20px rgba(255,92,154,0.5), 0 0 40px rgba(255,92,154,0.2); }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+        @keyframes float-slow { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(55px,-45px) scale(1.1)} 50%{transform:translate(-35px,35px) scale(0.92)} 75%{transform:translate(45px,18px) scale(1.07)} 100%{transform:translate(0,0) scale(1)} }
+        @keyframes float-drift { 0%{transform:translate(0,0) scale(1) rotate(0deg)} 33%{transform:translate(-45px,-55px) scale(1.13) rotate(3deg)} 66%{transform:translate(38px,28px) scale(0.9) rotate(-2deg)} 100%{transform:translate(0,0) scale(1) rotate(0deg)} }
+        .gradient-mesh { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+        .blob { position:absolute; border-radius:50%; filter:blur(80px); animation:float-slow 11s ease-in-out infinite; }
+        .blob:nth-child(2) { animation:float-drift 15s ease-in-out infinite; }
+        .blob:nth-child(3) { animation:float-slow 19s ease-in-out infinite reverse; }
+        .slide::before { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat:repeat; background-size:256px 256px; opacity:0.03; mix-blend-mode:overlay; }
+        .slide::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background:radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+        code { background: rgba(255,92,154,0.12); border: 1px solid rgba(255,92,154,0.2); border-radius: 4px; padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: #ffb3cf; }
+        .code-block { background: rgba(0,0,0,0.35); border: 1px solid rgba(255,92,154,0.2); border-radius: 8px; padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #ffb3cf; line-height: 1.6; overflow: hidden; }
+        .tag-pill { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+        .bar-fill { border-radius: 4px; height: 8px; }
+        @media (max-width: 760px), (max-height: 620px) {
+            html, body { height: 100dvh; overflow: hidden; }
+            body { width: 100%; }
+            .deck { width: 100%; height: 100dvh; }
+            .slide { justify-content: flex-start !important; overflow-x: hidden !important; overflow-y: auto !important; padding: 1rem 0 6rem; }
+            .slide > .content { max-width: 100%; padding: 1.1rem !important; }
+            .slide [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            .slide [style*="display:grid"] { gap: 0.75rem !important; }
+            .slide [style*="display:flex"] { flex-wrap: wrap !important; }
+            .slide [style*="font-size:100px"], .slide [style*="font-size:90px"], .slide [style*="font-size:96px"] { font-size: clamp(3rem, 18vw, 4.5rem) !important; }
+            h1, h2, p, div, span { overflow-wrap: anywhere; }
+            code, .code-block { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+            .code-block { overflow-x: auto; font-size: 0.68rem !important; }
+            table { display: block; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+            .nav-controls { bottom: max(0.75rem, env(safe-area-inset-bottom)); width: calc(100% - 1.5rem); max-width: 28rem; justify-content: center; gap: 0.5rem; padding: 0.5rem 0.65rem; }
+            .nav-btn { width: 2rem; height: 2rem; flex: 0 0 2rem; }
+            .slide-dots { max-width: 45vw; overflow-x: auto; padding: 0.2rem; }
+            .blob { transform: scale(0.72); filter: blur(56px); }
+            canvas { pointer-events: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide active" data-slide="1">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-110px;right:-100px;background:var(--color-accent-1);opacity:.15;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-90px;left:-70px;background:var(--color-accent-3);opacity:.1;"></div>
+        <div class="blob" style="width:220px;height:220px;top:38%;left:12%;background:var(--color-accent-2);opacity:.08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:100px;margin-bottom:1rem;animation:float 3s ease-in-out infinite;" class="reveal">🛡️</div>
+        <h1 class="font-display reveal" style="font-size:clamp(2.4rem,5.5vw,4.2rem);font-weight:900;background:linear-gradient(135deg,#ff5c9a,#ff8fbd,#d6a84f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.8rem;line-height:1.1;">Backup e Recovery</h1>
+        <p class="reveal" style="font-size:clamp(.85rem,1.4vw,1.2rem);color:var(--color-text-muted);letter-spacing:5px;text-transform:uppercase;font-weight:300;">Oracle Database · Segurança e Disponibilidade</p>
+        <div class="reveal" style="margin-top:2rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(255,92,154,.15);color:#ffb3cf;border:1px solid rgba(255,92,154,.3);">LogMiner</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,.15);color:#f0cb77;border:1px solid rgba(214,168,79,.3);">Flashback</span>
+            <span class="tag-pill" style="background:rgba(86,199,178,.12);color:#9ee0d3;border:1px solid rgba(86,199,178,.25);">Data Pump</span>
+            <span class="tag-pill" style="background:rgba(168,85,247,.15);color:#f0b6cf;border:1px solid rgba(168,85,247,.3);">RMAN</span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 2: AGENDA -->
+<div class="slide" data-slide="2">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-80px;right:-80px;background:var(--color-accent-1);opacity:.08;"></div>
+        <div class="blob" style="width:240px;height:240px;bottom:-60px;left:-40px;background:var(--color-accent-2);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;margin-bottom:1.6rem;">Conteúdo <span style="color:var(--color-accent-1)">desta aula</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #ff5c9a;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.5rem;margin-bottom:.4rem;">🔍</div>
+                <div style="font-weight:600;font-size:.95rem;margin-bottom:.3rem;">Categorias de Falhas</div>
+                <div style="font-size:.8rem;color:var(--color-text-muted);">Instância, erros do usuário, perda de mídia, catástrofes</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #d6a84f;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.5rem;margin-bottom:.4rem;">📜</div>
+                <div style="font-weight:600;font-size:.95rem;margin-bottom:.3rem;">LogMiner</div>
+                <div style="font-size:.8rem;color:var(--color-text-muted);">6 passos para minerar REDO logs e auditar operações</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #e08ab6;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.5rem;margin-bottom:.4rem;">⚡</div>
+                <div style="font-weight:600;font-size:.95rem;margin-bottom:.3rem;">Flashback</div>
+                <div style="font-size:.8rem;color:var(--color-text-muted);">Drop, Table, Query, Version, Transaction, Data Archive, Database</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #56c7b2;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.5rem;margin-bottom:.4rem;">💾</div>
+                <div style="font-weight:600;font-size:.95rem;margin-bottom:.3rem;">Data Pump + RMAN</div>
+                <div style="font-size:.8rem;color:var(--color-text-muted);">EXPDP/IMPDP, backup incremental, restore, CDB/PDB</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 3: CATEGORIAS DE FALHAS -->
+<div class="slide" data-slide="3">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-70px;right:-70px;background:var(--color-accent-1);opacity:.08;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-40px;background:var(--color-accent-3);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:var(--color-accent-1);text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;font-weight:600;margin-bottom:.5rem;">O que pode acontecer?</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:700;margin-bottom:1.4rem;">Categorias de <span style="color:var(--color-accent-3)">Falhas</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.25);border-radius:10px;padding:.9rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:.5rem;">⚡</div>
+                <div style="font-weight:700;font-size:.85rem;color:#ffb3cf;margin-bottom:.4rem;">Falha na Instância</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);line-height:1.5;">Falta de energia, hardware, processos background. Recuperação <strong style="color:#9ee0d3">automática</strong> via SMON.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.25);border-radius:10px;padding:.9rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:.5rem;">👤</div>
+                <div style="font-weight:700;font-size:.85rem;color:#f0cb77;margin-bottom:.4rem;">Erros do Usuário</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);line-height:1.5;">DROP/TRUNCATE TABLE, UPDATE/DELETE sem WHERE correto. Usar Flashback, LogMiner ou Export.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:.9rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:.5rem;">💿</div>
+                <div style="font-weight:700;font-size:.85rem;color:#ffb0c4;margin-bottom:.4rem;">Perda de Mídia</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);line-height:1.5;">Arquivo corrompido/perdido. Exige cópias físicas. Solução: RMAN, ASM, clusters.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:.9rem;text-align:center;">
+                <div style="font-size:1.8rem;margin-bottom:.5rem;">🌪️</div>
+                <div style="font-weight:700;font-size:.85rem;color:#f0b6cf;margin-bottom:.4rem;">Catástrofes</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);line-height:1.5;">Perda total do data center. Requer site backup, espelhamento remoto, RMAN + clusters.</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:1rem;background:rgba(255,92,154,.08);border:1px solid rgba(255,92,154,.2);border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:var(--color-text-secondary);">
+            💡 <strong>Cluster options:</strong> Ativo/Passivo (Active Data Guard) · Ativo/Ativo (Oracle RAC)
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: LOGMINER INTRO -->
+<div class="slide" data-slide="4">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:370px;height:370px;top:-80px;right:-80px;background:#d6a84f;opacity:.08;"></div>
+        <div class="blob" style="width:230px;height:230px;bottom:-55px;left:-40px;background:var(--color-accent-1);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#d6a84f;text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;font-weight:600;margin-bottom:.5rem;">Erros do Usuário</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:700;margin-bottom:1.2rem;">LogMiner — <span style="color:#f0cb77">6 Passos</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">1</span><span style="font-size:.85rem;font-weight:600;">Supplemental Log</span></div>
+                <code style="font-size:.68rem;display:block;padding:.4rem .6rem;">ALTER DATABASE ADD<br>SUPPLEMENTAL LOG DATA;</code>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">2</span><span style="font-size:.85rem;font-weight:600;">Configurar Dicionário</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);line-height:1.5;">Online Catalog, Redo Log Files ou Flat File. Online é o mais simples e direto.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">3</span><span style="font-size:.85rem;font-weight:600;">Especificar REDOs</span></div>
+                <code style="font-size:.68rem;display:block;padding:.4rem .6rem;">DBMS_LOGMNR.ADD_LOGFILE(<br>LogFileName, options);</code>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">4</span><span style="font-size:.85rem;font-weight:600;">Iniciar LogMiner</span></div>
+                <code style="font-size:.68rem;display:block;padding:.4rem .6rem;">DBMS_LOGMNR.START_LOGMNR(<br>OPTIONS => DICT_FROM_<br>ONLINE_CATALOG + <br>CONTINUOUS_MINE);</code>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">5</span><span style="font-size:.85rem;font-weight:600;">Consultar Conteúdo</span></div>
+                <code style="font-size:.68rem;display:block;padding:.4rem .6rem;">SELECT OPERATION,<br>SQL_REDO, SQL_UNDO<br>FROM V$LOGMNR_CONTENTS;</code>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.2);border-radius:10px;padding:.85rem;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;"><span style="background:#d6a84f;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;">6</span><span style="font-size:.85rem;font-weight:600;">Encerrar Sessão</span></div>
+                <code style="font-size:.68rem;display:block;padding:.4rem .6rem;">EXECUTE DBMS_LOGMNR<br>.END_LOGMNR;</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 5: FLASHBACK TECNOLOGIAS -->
+<div class="slide" data-slide="5">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-75px;right:-75px;background:#e08ab6;opacity:.1;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-40px;background:var(--color-accent-2);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#e08ab6;text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;font-weight:600;margin-bottom:.5rem;">Erros do Usuário</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1.2rem;">Flashback Technologies — <span style="color:#f0b6cf">Visão Geral</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">⚡ Flashback Drop</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Recycle Bin</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Desfaz um DROP TABLE. Tabela vai para RECYCLEBIN com nome <code>BIN$...</code></div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">📋 Flashback Table</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Dados de Undo</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Retorna tabela a SCN/TIMESTAMP anterior. Exige <code>ENABLE ROW MOVEMENT</code>.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">🔎 Flashback Query</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Dados de Undo</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Consulta dados de um ponto no passado via <code>AS OF SCN</code> ou <code>AS OF TIMESTAMP</code>.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">🕐 Flashback Versions</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Dados de Undo</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Vê todas as versões de linhas num intervalo via <code>VERSIONS BETWEEN</code>.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">🔄 Flashback Transaction</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Dados de Undo</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Reverte transação e dependentes via <code>TRANSACTION_BACKOUT</code>. Opções: CASCADE, NOCASCADE_FORCE.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(168,85,247,.2);border-radius:9px;padding:.8rem;">
+                <div style="font-weight:700;font-size:.83rem;color:#f0b6cf;margin-bottom:.3rem;">🗄️ Flashback Database</div>
+                <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:.4rem;">Fonte: <span style="color:#ffe8f2">Flashback Logs</span></div>
+                <div style="font-size:.72rem;color:var(--color-text-secondary);">Reverte o banco inteiro. Requer modo ARCHIVELOG + FRA + <code>ALTER DATABASE FLASHBACK ON</code>.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: FLASHBACK QUERY & TABLE -->
+<div class="slide" data-slide="6">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:340px;height:340px;top:-70px;right:-70px;background:#e08ab6;opacity:.08;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-45px;left:-40px;background:var(--color-accent-1);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:1.1rem;">Flashback Query & <span style="color:#f0b6cf">Table</span> — Comandos</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">🔎 Flashback Query — por Sessão</div>
+                <div class="code-block">-- Habilita toda a sessão num SCN
+EXECUTE DBMS_FLASHBACK
+  .ENABLE_AT_SYSTEM_CHANGE_NUMBER(scn);
+
+-- ou por timestamp
+EXECUTE DBMS_FLASHBACK
+  .ENABLE_AT_TIME(TO_TIMESTAMP(...));
+
+-- Desabilita
+EXECUTE DBMS_FLASHBACK.DISABLE;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">🔎 Flashback Query — por Comando</div>
+                <div class="code-block">-- AS OF SCN
+SELECT * FROM emp
+AS OF SCN 1254890;
+
+-- AS OF TIMESTAMP (1h atrás)
+SELECT * FROM emp
+AS OF TIMESTAMP
+  (SYSTIMESTAMP - INTERVAL '1' HOUR);</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">📋 Flashback Table</div>
+                <div class="code-block">-- Habilitar Row Movement
+ALTER TABLE emp ENABLE ROW MOVEMENT;
+
+-- Retornar ao SCN
+FLASHBACK TABLE emp TO SCN 1254890;
+
+-- Retornar ao Timestamp
+FLASHBACK TABLE emp TO TIMESTAMP
+  TO_TIMESTAMP('2025-04-16 14:00:00',
+    'YYYY-MM-DD HH24:MI:SS');</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">🗑️ Flashback Drop (Recyclebin)</div>
+                <div class="code-block">-- Recuperar tabela da lixeira
+FLASHBACK TABLE emp
+  TO BEFORE DROP
+  [RENAME TO emp_restored];
+
+-- Limpar lixeira
+PURGE TABLE emp;
+PURGE RECYCLEBIN;
+PURGE DBA_RECYCLEBIN;
+
+-- Ligar/desligar Recyclebin
+ALTER SESSION SET recyclebin = ON;</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: FLASHBACK DATA ARCHIVE -->
+<div class="slide" data-slide="7">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:340px;height:340px;top:-70px;right:-70px;background:#e08ab6;opacity:.08;"></div>
+        <div class="blob" style="width:200px;height:200px;bottom:-45px;left:-35px;background:#d6a84f;opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:.9rem;">Flashback Data Archive — <span style="color:#f0cb77">Histórico Permanente</span></h2>
+        <div class="reveal" style="background:rgba(214,168,79,.08);border:1px solid rgba(214,168,79,.2);border-radius:8px;padding:.6rem 1rem;font-size:.78rem;color:#f0cb77;margin-bottom:.9rem;">
+            ⚠️ Flashback Table/Query usam UNDO (temporário). Flashback Data Archive guarda histórico por anos em tablespace dedicada.
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0cb77;margin-bottom:.5rem;">📦 Criar e Habilitar</div>
+                <div class="code-block">-- Criar archive com retenção 5 anos
+CREATE FLASHBACK ARCHIVE meu_arqfda
+  TABLESPACE ts_flashback
+  RETENTION 5 YEAR;
+
+-- Habilitar na tabela (usa DEFAULT)
+ALTER TABLE emp FLASHBACK ARCHIVE;
+
+-- Habilitar com archive específico
+ALTER TABLE emp
+  FLASHBACK ARCHIVE meu_arqfda;
+
+-- Desabilitar
+ALTER TABLE emp NO FLASHBACK ARCHIVE;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0cb77;margin-bottom:.5rem;">🔍 Consultar e Gerenciar</div>
+                <div class="code-block">-- Consultar histórico completo
+SELECT versions_starttime,
+       versions_operation, emp.*
+FROM emp
+VERSIONS BETWEEN TIMESTAMP
+  MINVALUE AND MAXVALUE;
+
+-- Views de monitoramento
+SELECT * FROM DBA_FLASHBACK_ARCHIVE;
+SELECT * FROM DBA_FLASHBACK_ARCHIVE_TABLES;
+SELECT * FROM DBA_FLASHBACK_ARCHIVE_TS;
+
+-- Excluir archive
+DROP FLASHBACK ARCHIVE meu_arqfda;</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: DATA PUMP -->
+<div class="slide" data-slide="8">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-75px;right:-75px;background:#56c7b2;opacity:.08;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-50px;left:-40px;background:var(--color-accent-1);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#56c7b2;text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;font-weight:600;margin-bottom:.5rem;">Exportação e Importação</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:1rem;">Data Pump — <span style="color:#9ee0d3">EXPDP / IMPDP</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#9ee0d3;margin-bottom:.5rem;">⚙️ Configuração</div>
+                <div class="code-block">-- 1. Criar diretório Oracle
+CREATE DIRECTORY dpump_dir
+  AS '/u01/backup';
+
+-- 2. Conceder privilégios
+GRANT READ, WRITE ON DIRECTORY
+  dpump_dir TO hr;
+
+-- 3. Grant de ROLEs especiais
+GRANT DATAPUMP_EXP_FULL_DATABASE
+  TO hr;
+GRANT DATAPUMP_IMP_FULL_DATABASE
+  TO hr;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#9ee0d3;margin-bottom:.5rem;">▶️ Execução</div>
+                <div class="code-block">-- Export completo
+expdp user/pass FULL=y
+  DIRECTORY=dpump_dir
+  DUMPFILE=full.dmp LOGFILE=exp.log
+
+-- Import completo
+impdp user/pass FULL=y
+  DIRECTORY=dpump_dir
+  DUMPFILE=full.dmp LOGFILE=imp.log
+
+-- Parâmetros avançados
+REMAP_SCHEMA=hr:scott
+QUERY=dept:"WHERE id < 120"
+EXCLUDE=PACKAGE
+CONTENT=DATA_ONLY</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:.9rem;display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;">
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.2);border-radius:8px;padding:.6rem;text-align:center;font-size:.72rem;">
+                <div style="color:#9ee0d3;font-weight:700;">DBA_DATAPUMP_JOBS</div>
+                <div style="color:var(--color-text-muted);">Jobs ativos</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.2);border-radius:8px;padding:.6rem;text-align:center;font-size:.72rem;">
+                <div style="color:#9ee0d3;font-weight:700;">USER_DATAPUMP_JOBS</div>
+                <div style="color:var(--color-text-muted);">Jobs do usuário</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.2);border-radius:8px;padding:.6rem;text-align:center;font-size:.72rem;">
+                <div style="color:#9ee0d3;font-weight:700;">DBA_DATAPUMP_SESSIONS</div>
+                <div style="color:var(--color-text-muted);">Sessões conectadas</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.2);border-radius:8px;padding:.6rem;text-align:center;font-size:.72rem;">
+                <div style="color:#9ee0d3;font-weight:700;">V$SESSION_LONGOPS</div>
+                <div style="color:var(--color-text-muted);">Progresso do job</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: RMAN CONFIG -->
+<div class="slide" data-slide="9">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-75px;right:-75px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-50px;left:-40px;background:#e08ab6;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:var(--color-accent-1);text-transform:uppercase;letter-spacing:.1em;font-size:.78rem;font-weight:600;margin-bottom:.5rem;">Backup Físico</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:1rem;">RMAN — <span style="color:#ffb3cf">Configuração</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb3cf;margin-bottom:.5rem;">⚙️ Configurar RMAN</div>
+                <div class="code-block">-- Conectar
+RMAN TARGET SYS/pass@BANCO
+     CATALOG rman/rman@BANCO
+
+-- Ver configurações
+RMAN> SHOW ALL;
+
+-- Destino dos backups
+CONFIGURE CHANNEL DEVICE TYPE DISK
+  FORMAT 'c:\backup\%U';
+
+-- Autobackup controlfile
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP
+  FORMAT FOR DEVICE TYPE DISK
+  TO FORMAT 'c:\backup\%F';
+
+-- Política de retenção
+CONFIGURE RETENTION POLICY TO
+  RECOVERY WINDOW OF 2 DAYS;
+-- ou por redundância
+CONFIGURE RETENTION POLICY TO
+  REDUNDANCY 3;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb3cf;margin-bottom:.5rem;">▶️ Executar Backup</div>
+                <div class="code-block">-- Full backup + archivelogs
+BACKUP DATABASE PLUS ARCHIVELOG;
+
+-- Só controlfile
+BACKUP CURRENT CONTROLFILE;
+
+-- Backup incremental nível 0 (base)
+BACKUP INCREMENTAL LEVEL 0
+  DATABASE PLUS ARCHIVELOG;
+
+-- Incremental diferencial nível 1
+BACKUP INCREMENTAL LEVEL 1
+  DATABASE;
+
+-- Incremental cumulativo
+BACKUP INCREMENTAL LEVEL 1
+  CUMULATIVE DATABASE;
+
+-- Script complexo
+RUN {
+  BACKUP DATABASE PLUS ARCHIVELOG;
+  BACKUP CURRENT CONTROLFILE;
+};</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: RMAN RESTORE & RECOVER -->
+<div class="slide" data-slide="10">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-75px;right:-75px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-50px;left:-40px;background:#56c7b2;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:1rem;">RMAN — <span style="color:#9ee0d3">Restore & Recover</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#9ee0d3;margin-bottom:.5rem;">🔄 Recover Completo</div>
+                <div class="code-block">RMAN> startup force nomount;
+
+-- Restaura controlfile do autobackup
+RMAN> RESTORE CONTROLFILE
+       FROM AUTOBACKUP;
+
+RMAN> startup force mount;
+
+-- Restaura e recupera banco
+RMAN> RESTORE DATABASE;
+RMAN> RECOVER DATABASE;
+RMAN> ALTER DATABASE OPEN;
+
+-- Se recover incompleto:
+RMAN> ALTER DATABASE OPEN RESETLOGS;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#9ee0d3;margin-bottom:.5rem;">⏱️ Recover Incompleto (PITR)</div>
+                <div class="code-block">RUN {
+  SET UNTIL SCN 1418901;
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+}
+ALTER DATABASE OPEN RESETLOGS;
+
+-- Ou por data/hora
+RUN {
+  SET UNTIL TIME
+    "TO_DATE('23-DEC-2013 12:00:00',
+     'DD-MON-YYYY HH24:MI:SS')";
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+}
+ALTER DATABASE OPEN RESETLOGS;</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:.9rem;display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;">
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.2);border-radius:8px;padding:.6rem;font-size:.72rem;">
+                <div style="color:#ffb3cf;font-weight:700;margin-bottom:.3rem;">REPORT NEED BACKUP</div>
+                <div style="color:var(--color-text-muted);">Verifica arquivos sem backup</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.2);border-radius:8px;padding:.6rem;font-size:.72rem;">
+                <div style="color:#ffb3cf;font-weight:700;margin-bottom:.3rem;">LIST BACKUP SUMMARY</div>
+                <div style="color:var(--color-text-muted);">Lista backups realizados</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.2);border-radius:8px;padding:.6rem;font-size:.72rem;">
+                <div style="color:#ffb3cf;font-weight:700;margin-bottom:.3rem;">RESTORE DATABASE VALIDATE</div>
+                <div style="color:var(--color-text-muted);">Valida sem fazer restore</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 11: CDB/PDB BACKUP -->
+<div class="slide" data-slide="11">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:340px;height:340px;top:-70px;right:-70px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-45px;left:-40px;background:#e08ab6;opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.1rem);font-weight:700;margin-bottom:1rem;">RMAN com <span style="color:#ffb3cf">CDB e PDBs</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb3cf;margin-bottom:.5rem;">💾 Backup CDB/PDB</div>
+                <div class="code-block">-- Full CDB (inclui todos PDBs)
+RMAN> BACKUP DATABASE PLUS ARCHIVELOG;
+
+-- Só ROOT container
+RMAN> BACKUP DATABASE ROOT;
+
+-- PDB específico (conectado ao CDB)
+RMAN> BACKUP PLUGGABLE DATABASE
+       pdb1, pdb2;
+
+-- Tablespace de PDB específico
+RMAN> BACKUP TABLESPACE
+       pdb1:system, pdb1:users;
+
+-- Conectado diretamente no PDB
+RMAN> BACKUP DATABASE;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb3cf;margin-bottom:.5rem;">🔄 Recovery CDB/PDB</div>
+                <div class="code-block">-- Recovery completo do CDB
+RUN {
+  SHUTDOWN IMMEDIATE;
+  STARTUP MOUNT;
+  RESTORE DATABASE;
+  RECOVER DATABASE;
+  ALTER DATABASE OPEN;
+}
+
+-- Recovery de PDB específico
+RUN {
+  ALTER PLUGGABLE DATABASE pdb1 CLOSE;
+  RESTORE PLUGGABLE DATABASE pdb1;
+  RECOVER PLUGGABLE DATABASE pdb1;
+  ALTER PLUGGABLE DATABASE pdb1
+    OPEN;
+}
+
+-- PITR em PDB
+SET UNTIL TIME "TO_DATE(...)";
+RESTORE PLUGGABLE DATABASE pdb1;
+RECOVER PLUGGABLE DATABASE pdb1;
+ALTER PLUGGABLE DATABASE pdb1
+  OPEN RESETLOGS;</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 12: ENCERRAMENTO -->
+<div class="slide" data-slide="12">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-110px;right:-100px;background:var(--color-accent-1);opacity:.14;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-90px;left:-70px;background:#e08ab6;opacity:.1;"></div>
+        <div class="blob" style="width:200px;height:200px;top:35%;left:10%;background:#d6a84f;opacity:.08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:90px;margin-bottom:.8rem;animation:float 3s ease-in-out infinite;" class="reveal">✅</div>
+        <h1 class="font-display reveal" style="font-size:clamp(2rem,5vw,3.8rem);font-weight:900;background:linear-gradient(135deg,#ff5c9a,#ff8fbd,#d6a84f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.8rem;">Bons Estudos!</h1>
+        <p class="reveal" style="font-size:clamp(.85rem,1.4vw,1.1rem);color:var(--color-text-muted);letter-spacing:4px;text-transform:uppercase;margin-bottom:1.5rem;">Backup e Recovery — Oracle Database</p>
+        <div class="reveal" style="display:flex;justify-content:center;gap:.8rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(255,92,154,.15);color:#ffb3cf;border:1px solid rgba(255,92,154,.3);">LogMiner · 6 Passos</span>
+            <span class="tag-pill" style="background:rgba(168,85,247,.15);color:#f0b6cf;border:1px solid rgba(168,85,247,.3);">Flashback · 7 Tipos</span>
+            <span class="tag-pill" style="background:rgba(86,199,178,.12);color:#9ee0d3;border:1px solid rgba(86,199,178,.25);">Data Pump EXPDP/IMPDP</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,.15);color:#f0cb77;border:1px solid rgba(214,168,79,.3);">RMAN Backup & Recovery</span>
+        </div>
+    </div>
+</div>
+
+</div><!-- end .deck -->
+
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <span class="slide-counter" id="counter">1 / 12</span>
+</div>
+
+<script>
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('counter');
+for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+function goToSlide(n) {
+    const prev = document.querySelector('.slide.active');
+    const next = document.querySelector(`.slide[data-slide="${n}"]`);
+    if (prev) prev.classList.remove('active');
+    if (next) { next.classList.add('active'); animateSlide(next); }
+    current = n; updateNav();
+}
+function changeSlide(dir) { let next = current + dir; if (next < 1) next = total; if (next > total) next = 1; goToSlide(next); }
+function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => { d.classList.toggle('active', i + 1 === current); }); counter.textContent = current + ' / ' + total; }
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1); });
+function animateSlide(slide) {
+    slide.querySelectorAll('.reveal').forEach((el, i) => {
+        el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)'; el.offsetHeight;
+        const delay = i * 0.08;
+        el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+        el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+    });
+}
+document.addEventListener('mousemove', (e) => {
+    const spotlight = document.querySelector('.mouse-spotlight');
+    if (spotlight) spotlight.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(255,92,154,0.06), transparent 40%)`;
+});
+window.initParticles = function(canvas, options) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d'); canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    const count = options.count || 55; let mx = -1000, my = -1000;
+    const particles = Array.from({ length: count }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, size: Math.random() * 2.5 + 0.8, alpha: Math.random() * 0.35 + 0.1 }));
+    canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; });
+    canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; });
+    (function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx*dx+dy*dy);
+            if (dist < 120) { const force = (120-dist)/120*2; p.vx += (dx/dist)*force*0.1; p.vy += (dy/dist)*force*0.1; }
+            p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fillStyle = `rgba(255,92,154,${p.alpha})`; ctx.fill();
+        });
+        requestAnimationFrame(animate);
+    })();
+};
+document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { count: 55 }));
+try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>

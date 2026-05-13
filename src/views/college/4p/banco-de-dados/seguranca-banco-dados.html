@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Segurança em Banco de Dados — Usuários, Privilégios e Roles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #160b13;
+            --color-bg-deep: #080407;
+            --color-surface: #2a1320;
+            --color-text: #ffe8f2;
+            --color-text-secondary: #d9b4c2;
+            --color-text-muted: #a98895;
+            --color-accent-1: #ff5c9a;
+            --color-accent-2: #d76ba3;
+            --color-accent-3: #56c7b2;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.08);
+            --color-vignette: rgba(0,0,0,0.45);
+            --font-display: 'JetBrains Mono', monospace;
+            --font-body: 'Inter', sans-serif;
+        }
+    </style>
+    <style>
+        :root { --color-bg: #160b13; --color-text: #ffe8f2; --glow-color-rgb: 255,92,154; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { background: var(--color-bg); margin: 0; }
+        body { font-family: 'Inter', sans-serif; color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+        .deck { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+        .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: clamp(1.5rem, 4vw, 3.5rem); }
+        .nav-controls { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 10px 24px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); }
+        .nav-btn { width: 38px; height: 38px; border: none; background: rgba(255,255,255,0.06); color: #ff5c9a; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .nav-btn:hover { background: rgba(255,92,154,0.15); }
+        .slide-dots { display: flex; gap: 8px; }
+        .slide-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+        .slide-dots .dot.active { background: #ff5c9a; transform: scale(1.3); }
+        .slide-counter { font-size: 0.75rem; color: #a98895; min-width: 40px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+        .reveal { opacity: 0; transform: translateY(20px); }
+        .text-glow { text-shadow: 0 0 20px rgba(255,92,154,0.5), 0 0 40px rgba(255,92,154,0.2); }
+        .stat-glow { text-shadow: 0 0 30px rgba(255,92,154,0.6), 0 0 60px rgba(255,92,154,0.25); }
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(255,92,154,0.5), 0 0 40px rgba(255,92,154,0.2); }
+            50% { text-shadow: 0 0 30px rgba(255,92,154,0.8), 0 0 60px rgba(255,92,154,0.3); }
+        }
+        .glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+        @keyframes float-slow { 0% { transform: translate(0,0) scale(1); } 25% { transform: translate(60px,-50px) scale(1.12); } 50% { transform: translate(-40px,40px) scale(0.9); } 75% { transform: translate(50px,20px) scale(1.08); } 100% { transform: translate(0,0) scale(1); } }
+        @keyframes float-drift { 0% { transform: translate(0,0) scale(1) rotate(0deg); } 33% { transform: translate(-50px,-60px) scale(1.15) rotate(3deg); } 66% { transform: translate(40px,30px) scale(0.88) rotate(-2deg); } 100% { transform: translate(0,0) scale(1) rotate(0deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .gradient-mesh { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); animation: float-slow 10s ease-in-out infinite; }
+        .blob:nth-child(2) { animation: float-drift 14s ease-in-out infinite; }
+        .blob:nth-child(3) { animation: float-slow 18s ease-in-out infinite reverse; }
+        .slide::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 256px 256px; opacity: 0.03; mix-blend-mode: overlay; }
+        .slide::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+        code, .code-block { font-family: 'JetBrains Mono', monospace; }
+        .code-block { background: rgba(255,92,154,0.06); border: 1px solid rgba(255,92,154,0.15); border-left: 3px solid #ff5c9a; border-radius: 8px; padding: 0.8rem 1.2rem; font-size: clamp(0.7rem, 1.2vw, 0.85rem); color: #ffb3cf; line-height: 1.7; }
+        .code-block .kw { color: #d76ba3; font-weight: 700; }
+        .code-block .val { color: #56c7b2; }
+        .code-block .cmt { color: #7f5b67; font-style: italic; }
+        .tag-pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+        .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(255,92,154,0.12); }
+        @media (max-width: 760px), (max-height: 620px) {
+            html, body { height: 100dvh; overflow: hidden; }
+            body { width: 100%; }
+            .deck { width: 100%; height: 100dvh; }
+            .slide { justify-content: flex-start !important; overflow-x: hidden !important; overflow-y: auto !important; padding: 1rem 0 6rem; }
+            .slide > .content { max-width: 100%; padding: 1.1rem !important; }
+            .slide [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            .slide [style*="display:grid"] { gap: 0.75rem !important; }
+            .slide [style*="display:flex"] { flex-wrap: wrap !important; }
+            .slide [style*="font-size:100px"], .slide [style*="font-size:90px"], .slide [style*="font-size:96px"] { font-size: clamp(3rem, 18vw, 4.5rem) !important; }
+            h1, h2, p, div, span { overflow-wrap: anywhere; }
+            code, .code-block { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+            .code-block { overflow-x: auto; font-size: 0.68rem !important; }
+            table { display: block; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+            .nav-controls { bottom: max(0.75rem, env(safe-area-inset-bottom)); width: calc(100% - 1.5rem); max-width: 28rem; justify-content: center; gap: 0.5rem; padding: 0.5rem 0.65rem; }
+            .nav-btn { width: 2rem; height: 2rem; flex: 0 0 2rem; }
+            .slide-dots { max-width: 45vw; overflow-x: auto; padding: 0.2rem; }
+            .blob { transform: scale(0.72); filter: blur(56px); }
+            canvas { pointer-events: none; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; } }
+    </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide slide-1 active" data-slide="1">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:500px;height:500px;top:-120px;right:-100px;background:#ff5c9a;opacity:0.12;"></div>
+        <div class="blob" style="width:350px;height:350px;bottom:-80px;left:-60px;background:#d76ba3;opacity:0.1;"></div>
+        <div class="blob" style="width:220px;height:220px;top:45%;left:20%;background:#56c7b2;opacity:0.08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:90px;margin-bottom:1rem;animation:float 3s ease-in-out infinite;" class="reveal">🔐</div>
+        <h1 class="font-display reveal glow-pulse" style="font-size:clamp(2rem,5vw,3.8rem);font-weight:900;background:linear-gradient(135deg,#ff5c9a,#d76ba3,#56c7b2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;margin-bottom:0.8rem;">Segurança em Banco de Dados</h1>
+        <p class="reveal" style="font-size:clamp(0.85rem,1.5vw,1.1rem);color:#a98895;letter-spacing:0.3em;text-transform:uppercase;font-weight:400;">Usuários · Privilégios · Roles — Oracle SQL</p>
+        <div class="reveal" style="margin-top:2rem;display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(255,92,154,0.12);color:#ff5c9a;border:1px solid rgba(255,92,154,0.2);">CREATE USER</span>
+            <span class="tag-pill" style="background:rgba(215,107,163,0.12);color:#d76ba3;border:1px solid rgba(215,107,163,0.2);">GRANT / REVOKE</span>
+            <span class="tag-pill" style="background:rgba(86,199,178,0.12);color:#56c7b2;border:1px solid rgba(86,199,178,0.2);">CREATE ROLE</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,0.12);color:#d6a84f;border:1px solid rgba(214,168,79,0.2);">DROP USER</span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 2: AGENDA -->
+<div class="slide slide-2" data-slide="2">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-80px;right:-80px;background:#ff5c9a;opacity:0.07;"></div>
+        <div class="blob" style="width:250px;height:250px;bottom:-50px;left:-40px;background:#d76ba3;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.5rem;">Conteúdo</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;margin-bottom:2rem;">O que vamos aprender?</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="reveal">
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-left:3px solid #ff5c9a;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">👤</div>
+                <div style="color:#ff5c9a;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">01 — Usuários</div>
+                <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">CREATE USER · ALTER USER · DROP USER · Autenticação · Tablespace · Quotas</div>
+            </div>
+            <div class="card-hover" style="background:rgba(215,107,163,0.06);border:1px solid rgba(215,107,163,0.12);border-left:3px solid #d76ba3;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🔑</div>
+                <div style="color:#d76ba3;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">02 — Privilégios</div>
+                <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">GRANT · REVOKE · De Sistema · De Objetos · WITH ADMIN/GRANT OPTION</div>
+            </div>
+            <div class="card-hover" style="background:rgba(86,199,178,0.06);border:1px solid rgba(86,199,178,0.12);border-left:3px solid #56c7b2;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🎭</div>
+                <div style="color:#56c7b2;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">03 — Roles (Papéis)</div>
+                <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">CREATE ROLE · ALTER ROLE · SET ROLE · DROP ROLE · Ativação/Desativação</div>
+            </div>
+            <div class="card-hover" style="background:rgba(214,168,79,0.06);border:1px solid rgba(214,168,79,0.12);border-left:3px solid #d6a84f;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">📊</div>
+                <div style="color:#d6a84f;font-weight:700;font-size:1rem;margin-bottom:0.4rem;">04 — Consultas DBA</div>
+                <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">DBA_USERS · DBA_SYS_PRIVS · DBA_ROLES · SESSION_PRIVS · Views do sistema</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 3: CREATE USER -->
+<div class="slide slide-3" data-slide="3">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-80px;background:#ff5c9a;opacity:0.08;"></div>
+        <div class="blob" style="width:200px;height:200px;bottom:-40px;left:-30px;background:#56c7b2;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">01 — Usuários</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.6rem,3vw,2.3rem);font-weight:800;margin-bottom:1.2rem;">CREATE USER — Criando um Usuário</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div class="reveal">
+                <div class="code-block">
+<span class="kw">CREATE USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">senha123</span><br>
+&nbsp;&nbsp;<span class="kw">DEFAULT TABLESPACE</span> <span class="val">users</span><br>
+&nbsp;&nbsp;<span class="kw">TEMPORARY TABLESPACE</span> <span class="val">temp</span><br>
+&nbsp;&nbsp;<span class="kw">QUOTA</span> 100M <span class="kw">ON</span> <span class="val">users</span><br>
+&nbsp;&nbsp;<span class="kw">ACCOUNT UNLOCK</span>;<br>
+<br>
+<span class="cmt">-- Forçar troca de senha no primeiro acesso</span><br>
+<span class="kw">CREATE USER</span> maria<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">tmp</span><br>
+&nbsp;&nbsp;<span class="kw">PASSWORD EXPIRE</span><br>
+&nbsp;&nbsp;<span class="kw">ACCOUNT LOCK</span>;
+                </div>
+            </div>
+            <div class="reveal" style="display:flex;flex-direction:column;gap:0.7rem;">
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.8rem 1rem;">
+                    <div style="color:#ff5c9a;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;">IDENTIFIED BY</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.4;">Define a senha para autenticação via banco de dados. Alternativa: EXTERNALLY (SO) ou via rede (SSL, LDAP).</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.8rem 1rem;">
+                    <div style="color:#56c7b2;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;">QUOTA {K|M|G} ON tablespace</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.4;">Limita o espaço que o usuário pode usar no tablespace. UNLIMITED remove o limite — mas o privilégio UNLIMITED TABLESPACE tem prioridade.</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.8rem 1rem;">
+                    <div style="color:#d6a84f;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;font-family:'JetBrains Mono',monospace;">PASSWORD EXPIRE / ACCOUNT LOCK</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.4;">EXPIRE força troca na próxima conexão. LOCK bloqueia o acesso imediatamente.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: ALTER / DROP USER -->
+<div class="slide slide-4" data-slide="4">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-80px;left:-60px;background:#d76ba3;opacity:0.08;"></div>
+        <div class="blob" style="width:200px;height:200px;bottom:-50px;right:-40px;background:#ff5c9a;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">01 — Usuários</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:1.2rem;">ALTER USER & DROP USER</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div class="reveal">
+                <p style="color:#d76ba3;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">ALTER USER — Alteração</p>
+                <div class="code-block">
+<span class="cmt">-- Trocar senha</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">novaSenha</span>;<br>
+<br>
+<span class="cmt">-- Alterar tablespace e quota</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">DEFAULT TABLESPACE</span> <span class="val">dados</span><br>
+&nbsp;&nbsp;<span class="kw">QUOTA UNLIMITED ON</span> <span class="val">dados</span>;<br>
+<br>
+<span class="cmt">-- Bloquear conta</span><br>
+<span class="kw">ALTER USER</span> joao <span class="kw">ACCOUNT LOCK</span>;<br>
+<br>
+<span class="cmt">-- Definir tablespace padrão global</span><br>
+<span class="kw">ALTER DATABASE DEFAULT TABLESPACE</span> <span class="val">users</span>;<br>
+<span class="kw">ALTER DATABASE DEFAULT TEMPORARY TABLESPACE</span> <span class="val">temp</span>;
+                </div>
+            </div>
+            <div class="reveal">
+                <p style="color:#ff789f;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">DROP USER — Exclusão</p>
+                <div class="code-block">
+<span class="cmt">-- Remover usuário sem objetos</span><br>
+<span class="kw">DROP USER</span> joao;<br>
+<br>
+<span class="cmt">-- Remover usuário E todos os objetos</span><br>
+<span class="cmt">-- do schema (tabelas, views, etc.)</span><br>
+<span class="kw">DROP USER</span> joao <span class="kw">CASCADE</span>;<br>
+<br>
+<span class="cmt">-- ⚠️  Não é possível remover</span><br>
+<span class="cmt">--     usuário conectado no momento</span>
+                </div>
+                <div style="background:rgba(255,120,159,0.08);border:1px solid rgba(255,120,159,0.15);border-radius:8px;padding:0.8rem 1rem;margin-top:0.8rem;">
+                    <div style="color:#ff789f;font-size:0.72rem;font-weight:700;margin-bottom:0.3rem;">⚠️ CASCADE é irreversível</div>
+                    <div style="color:#d9b4c2;font-size:0.78rem;line-height:1.4;">Remove tabelas, views, índices e todos os objetos do schema do usuário. Não há como desfazer sem backup.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 5: TIPOS DE PRIVILÉGIOS -->
+<div class="slide slide-5" data-slide="5">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-80px;background:#d76ba3;opacity:0.09;"></div>
+        <div class="blob" style="width:250px;height:250px;bottom:-60px;left:-40px;background:#ff5c9a;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#d76ba3;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">02 — Privilégios</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.6rem,3vw,2.3rem);font-weight:800;margin-bottom:1.2rem;">Tipos de Privilégios</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div class="reveal">
+                <div style="background:rgba(215,107,163,0.07);border:1px solid rgba(215,107,163,0.15);border-left:3px solid #d76ba3;border-radius:10px;padding:1.1rem 1.3rem;">
+                    <div style="color:#d76ba3;font-weight:700;font-size:0.95rem;margin-bottom:0.6rem;">🌐 Privilégios de Sistema</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.6;">
+                        Controlam <strong style="color:#ffe8f2;">operações no banco inteiro</strong>.<br><br>
+                        <span class="tag-pill" style="background:rgba(215,107,163,0.1);color:#d76ba3;">Todo o sistema</span> <span style="color:#a98895;font-size:0.75rem;margin-left:4px;">CREATE TABLESPACE, CREATE SESSION</span><br><br>
+                        <span class="tag-pill" style="background:rgba(215,107,163,0.1);color:#d76ba3;">Qualquer schema</span> <span style="color:#a98895;font-size:0.75rem;margin-left:4px;">CREATE ANY TABLE</span><br><br>
+                        <span class="tag-pill" style="background:rgba(215,107,163,0.1);color:#d76ba3;">Próprio schema</span> <span style="color:#a98895;font-size:0.75rem;margin-left:4px;">CREATE TABLE</span>
+                    </div>
+                </div>
+            </div>
+            <div class="reveal">
+                <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.15);border-left:3px solid #56c7b2;border-radius:10px;padding:1.1rem 1.3rem;">
+                    <div style="color:#56c7b2;font-weight:700;font-size:0.95rem;margin-bottom:0.6rem;">📋 Privilégios de Objetos</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">Controlam ações sobre <strong style="color:#ffe8f2;">objetos específicos</strong>.</div>
+                    <table style="width:100%;margin-top:0.7rem;font-size:0.72rem;border-collapse:collapse;">
+                        <tr style="color:#ff5c9a;">
+                            <th style="text-align:left;padding:0.2rem 0.4rem;font-family:'JetBrains Mono',monospace;">Privilégio</th>
+                            <th style="text-align:center;padding:0.2rem;">Tab</th>
+                            <th style="text-align:center;padding:0.2rem;">View</th>
+                            <th style="text-align:center;padding:0.2rem;">Seq</th>
+                            <th style="text-align:center;padding:0.2rem;">Proc</th>
+                        </tr>
+                        <tr style="color:#d9b4c2;border-top:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:0.2rem 0.4rem;font-family:'JetBrains Mono',monospace;color:#ffb3cf;">SELECT</td>
+                            <td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#7f5b67;">—</td>
+                        </tr>
+                        <tr style="color:#d9b4c2;border-top:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:0.2rem 0.4rem;font-family:'JetBrains Mono',monospace;color:#ffb3cf;">INSERT/UPDATE/DELETE</td>
+                            <td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#7f5b67;">—</td><td style="text-align:center;color:#7f5b67;">—</td>
+                        </tr>
+                        <tr style="color:#d9b4c2;border-top:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:0.2rem 0.4rem;font-family:'JetBrains Mono',monospace;color:#ffb3cf;">EXECUTE</td>
+                            <td style="text-align:center;color:#7f5b67;">—</td><td style="text-align:center;color:#7f5b67;">—</td><td style="text-align:center;color:#7f5b67;">—</td><td style="text-align:center;color:#56c7b2;">✓</td>
+                        </tr>
+                        <tr style="color:#d9b4c2;border-top:1px solid rgba(255,255,255,0.06);">
+                            <td style="padding:0.2rem 0.4rem;font-family:'JetBrains Mono',monospace;color:#ffb3cf;">ALTER / INDEX</td>
+                            <td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#56c7b2;">✓</td><td style="text-align:center;color:#7f5b67;">—</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: GRANT -->
+<div class="slide slide-6" data-slide="6">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-90px;right:-70px;background:#56c7b2;opacity:0.07;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-30px;background:#d76ba3;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#56c7b2;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">02 — Privilégios</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:1.2rem;">GRANT — Concedendo Privilégios</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#d76ba3;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">De Sistema</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Sintaxe</span><br>
+<span class="kw">GRANT</span> system_privilege<br>
+&nbsp;&nbsp;<span class="kw">TO</span> user | role | <span class="val">PUBLIC</span><br>
+&nbsp;&nbsp;[<span class="kw">WITH ADMIN OPTION</span>];<br>
+<br>
+<span class="cmt">-- Exemplos</span><br>
+<span class="kw">GRANT</span> <span class="val">CREATE SESSION</span> <span class="kw">TO</span> joao;<br>
+<span class="kw">GRANT</span> <span class="val">CREATE TABLE</span> <span class="kw">TO</span> maria<br>
+&nbsp;&nbsp;<span class="kw">WITH ADMIN OPTION</span>;<br>
+<span class="kw">GRANT</span> <span class="val">CREATE SESSION</span> <span class="kw">TO PUBLIC</span>;
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#56c7b2;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">De Objetos</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Sintaxe</span><br>
+<span class="kw">GRANT</span> object_privilege [(colunas)]<br>
+&nbsp;&nbsp;| <span class="val">ALL</span> [PRIVILEGES]<br>
+&nbsp;&nbsp;<span class="kw">ON</span> objeto<br>
+&nbsp;&nbsp;<span class="kw">TO</span> user | role | <span class="val">PUBLIC</span><br>
+&nbsp;&nbsp;[<span class="kw">WITH GRANT OPTION</span>];<br>
+<br>
+<span class="cmt">-- Exemplos reais</span><br>
+<span class="kw">GRANT</span> <span class="val">SELECT, INSERT, UPDATE, DELETE</span><br>
+&nbsp;&nbsp;<span class="kw">ON</span> TAB_VEICULOS <span class="kw">TO</span> RO_FROTA;<br>
+<span class="kw">GRANT</span> <span class="val">EXECUTE</span> <span class="kw">ON</span> PC_ESCALA <span class="kw">TO</span> RO_ESCALA;<br>
+<span class="kw">GRANT</span> <span class="val">UPDATE</span> (STA_CONTRATO)<br>
+&nbsp;&nbsp;<span class="kw">ON</span> TAB_CONTRATO <span class="kw">TO</span> RO_SUPERVISOR;<br>
+<span class="kw">GRANT</span> <span class="val">ALL ON</span> TAB_CONVERSAO <span class="kw">TO</span> joao<br>
+&nbsp;&nbsp;<span class="kw">WITH GRANT OPTION</span>;
+                </div>
+            </div>
+        </div>
+        <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.8rem;">
+            <div style="background:rgba(215,107,163,0.07);border:1px solid rgba(215,107,163,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.78rem;">
+                <strong style="color:#d76ba3;">WITH ADMIN OPTION</strong> <span style="color:#d9b4c2;">(sistema) → permite ao recebedor conceder, revogar e até <em>eliminar</em> o privilégio para outros.</span>
+            </div>
+            <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.78rem;">
+                <strong style="color:#56c7b2;">WITH GRANT OPTION</strong> <span style="color:#d9b4c2;">(objetos) → permite ao recebedor conceder o privilégio a outros usuários.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: REVOKE -->
+<div class="slide slide-7" data-slide="7">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-80px;left:-60px;background:#ff789f;opacity:0.07;"></div>
+        <div class="blob" style="width:200px;height:200px;bottom:-40px;right:-30px;background:#d76ba3;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff789f;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">02 — Privilégios</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:1.2rem;">REVOKE — Revogando Privilégios</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#d76ba3;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">De Sistema</p>
+                <div class="code-block reveal">
+<span class="kw">REVOKE</span> system_privilege<br>
+&nbsp;&nbsp;<span class="kw">FROM</span> user | role | <span class="val">PUBLIC</span>;<br>
+<br>
+<span class="cmt">-- Qualquer admin com ADMIN OPTION</span><br>
+<span class="cmt">-- pode revogar de qualquer usuário,</span><br>
+<span class="cmt">-- mesmo sem ter concedido antes</span>
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#ff789f;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">De Objetos</p>
+                <div class="code-block reveal">
+<span class="kw">REVOKE</span> object_privilege | <span class="val">ALL</span> [PRIVILEGES]<br>
+&nbsp;&nbsp;<span class="kw">ON</span> objeto<br>
+&nbsp;&nbsp;<span class="kw">FROM</span> user | role | <span class="val">PUBLIC</span><br>
+&nbsp;&nbsp;[<span class="kw">CASCADE CONSTRAINTS</span>];<br>
+<br>
+<span class="cmt">-- CASCADE CONSTRAINTS remove restrições</span><br>
+<span class="cmt">-- de integridade referencial criadas</span><br>
+<span class="cmt">-- pelo revogado via REFERENCES ou ALL</span>
+                </div>
+            </div>
+        </div>
+        <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.9rem;">
+            <div style="background:rgba(255,120,159,0.07);border:1px solid rgba(255,120,159,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.79rem;">
+                <strong style="color:#ff789f;">Sistema:</strong> <span style="color:#d9b4c2;">Quem tem ADMIN OPTION pode revogar de <em>qualquer</em> usuário.</span>
+            </div>
+            <div style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.79rem;">
+                <strong style="color:#d6a84f;">Objetos:</strong> <span style="color:#d9b4c2;">Somente <em>quem concedeu</em> o privilégio pode revogá-lo.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: ROLES -->
+<div class="slide slide-8" data-slide="8">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:420px;height:420px;top:-100px;right:-80px;background:#56c7b2;opacity:0.08;"></div>
+        <div class="blob" style="width:230px;height:230px;bottom:-50px;left:-30px;background:#ff5c9a;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#56c7b2;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">03 — Roles</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:0.8rem;">CREATE ROLE & Gerenciamento</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#56c7b2;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">Criar e Alterar</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Role sem senha</span><br>
+<span class="kw">CREATE ROLE</span> ro_vendedor<br>
+&nbsp;&nbsp;<span class="kw">NOT IDENTIFIED</span>;<br>
+<br>
+<span class="cmt">-- Role com senha (mais segura)</span><br>
+<span class="kw">CREATE ROLE</span> ro_supervisor<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">segredo</span>;<br>
+<br>
+<span class="cmt">-- Alterar autenticação da role</span><br>
+<span class="kw">ALTER ROLE</span> ro_supervisor<br>
+&nbsp;&nbsp;<span class="kw">NOT IDENTIFIED</span>;<br>
+<br>
+<span class="cmt">-- Eliminar role (revoga de todos)</span><br>
+<span class="kw">DROP ROLE</span> ro_vendedor;
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#ff5c9a;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">Conceder e Revogar Roles</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Conceder role a usuário</span><br>
+<span class="kw">GRANT</span> ro_vendedor <span class="kw">TO</span> joao;<br>
+<span class="kw">GRANT</span> ro_supervisor <span class="kw">TO</span> maria<br>
+&nbsp;&nbsp;<span class="kw">WITH ADMIN OPTION</span>;<br>
+<br>
+<span class="cmt">-- Atribuir privilégios à role</span><br>
+<span class="kw">GRANT</span> <span class="val">SELECT</span> <span class="kw">ON</span> TAB_CLIENTE<br>
+&nbsp;&nbsp;<span class="kw">TO</span> ro_vendedor;<br>
+<br>
+<span class="cmt">-- Revogar role do usuário</span><br>
+<span class="kw">REVOKE</span> ro_vendedor <span class="kw">FROM</span> joao;
+                </div>
+                <div class="reveal" style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.12);border-radius:8px;padding:0.7rem 1rem;margin-top:0.7rem;font-size:0.78rem;">
+                    <strong style="color:#56c7b2;">WITH ADMIN OPTION</strong> <span style="color:#d9b4c2;">em roles permite ao recebedor também conceder, revogar, alterar ou eliminar a role.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: SET ROLE / ALTER USER DEFAULT ROLE -->
+<div class="slide slide-9" data-slide="9">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-80px;right:-60px;background:#d6a84f;opacity:0.07;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-30px;background:#56c7b2;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#d6a84f;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">03 — Roles</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:1.2rem;">Ativação e Desativação de Roles</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#d6a84f;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">ALTER USER — Roles padrão no logon</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Nenhuma role ativa ao conectar</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">DEFAULT ROLE NONE</span>;<br>
+<br>
+<span class="cmt">-- Ativar somente uma role</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">DEFAULT ROLE</span> ro_gerente;<br>
+<br>
+<span class="cmt">-- Todas exceto uma</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">DEFAULT ROLE ALL EXCEPT</span> ro_supervisor;<br>
+<br>
+<span class="cmt">-- Restaurar todas</span><br>
+<span class="kw">ALTER USER</span> joao <span class="kw">DEFAULT ROLE ALL</span>;
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#ff5c9a;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">SET ROLE — Durante a sessão</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Desativar todas as roles agora</span><br>
+<span class="kw">SET ROLE NONE</span>;<br>
+<br>
+<span class="cmt">-- Ativar role com senha</span><br>
+<span class="kw">SET ROLE</span> ro_gerente<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">teste</span>;<br>
+<br>
+<span class="cmt">-- Ativar todas as roles concedidas</span><br>
+<span class="kw">SET ROLE ALL</span>;<br>
+<span class="cmt">-- (só funciona se nenhuma tem senha)</span><br>
+<br>
+<span class="cmt">-- Todas exceto uma</span><br>
+<span class="kw">SET ROLE ALL EXCEPT</span> ro_supervisor;
+                </div>
+                <div class="reveal" style="background:rgba(255,92,154,0.07);border:1px solid rgba(255,92,154,0.12);border-radius:8px;padding:0.7rem 1rem;margin-top:0.7rem;font-size:0.78rem;">
+                    <strong style="color:#ff5c9a;">Dica:</strong> <span style="color:#d9b4c2;">DBMS_SESSION.SET_ROLE também pode ativar/desativar roles via PL/SQL dentro de procedures.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: VIEWS DE CONSULTA / CONSIDERAÇÕES FINAIS -->
+<div class="slide slide-10" data-slide="10">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:460px;height:460px;top:-110px;right:-90px;background:#ff5c9a;opacity:0.1;"></div>
+        <div class="blob" style="width:300px;height:300px;bottom:-70px;left:-50px;background:#d76ba3;opacity:0.08;"></div>
+        <div class="blob" style="width:180px;height:180px;top:40%;left:15%;background:#56c7b2;opacity:0.06;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">04 — Referência</p>
+        <h2 class="reveal font-display" style="font-size:clamp(1.6rem,3vw,2.3rem);font-weight:800;margin-bottom:1rem;">Views de Consulta & Resumo</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.8rem;" class="reveal">
+            <div style="background:rgba(255,92,154,0.07);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <div style="color:#ff5c9a;font-weight:700;font-size:0.82rem;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">👤 Usuários</div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                    <code style="color:#ffb3cf;font-size:0.75rem;background:rgba(255,92,154,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_USERS</code>
+                    <code style="color:#ffb3cf;font-size:0.75rem;background:rgba(255,92,154,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_TS_QUOTAS</code>
+                </div>
+            </div>
+            <div style="background:rgba(215,107,163,0.07);border:1px solid rgba(215,107,163,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <div style="color:#d76ba3;font-weight:700;font-size:0.82rem;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🔑 Privilégios</div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                    <code style="color:#a5b4fc;font-size:0.75rem;background:rgba(215,107,163,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_SYS_PRIVS</code>
+                    <code style="color:#a5b4fc;font-size:0.75rem;background:rgba(215,107,163,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_TAB_PRIVS</code>
+                    <code style="color:#a5b4fc;font-size:0.75rem;background:rgba(215,107,163,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_COL_PRIVS</code>
+                    <code style="color:#a5b4fc;font-size:0.75rem;background:rgba(215,107,163,0.08);padding:0.2rem 0.5rem;border-radius:4px;">SESSION_PRIVS</code>
+                </div>
+            </div>
+            <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <div style="color:#56c7b2;font-weight:700;font-size:0.82rem;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🎭 Roles</div>
+                <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                    <code style="color:#6ee7b7;font-size:0.75rem;background:rgba(86,199,178,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_ROLES</code>
+                    <code style="color:#6ee7b7;font-size:0.75rem;background:rgba(86,199,178,0.08);padding:0.2rem 0.5rem;border-radius:4px;">DBA_ROLE_PRIVS</code>
+                    <code style="color:#6ee7b7;font-size:0.75rem;background:rgba(86,199,178,0.08);padding:0.2rem 0.5rem;border-radius:4px;">ROLE_SYS_PRIVS</code>
+                    <code style="color:#6ee7b7;font-size:0.75rem;background:rgba(86,199,178,0.08);padding:0.2rem 0.5rem;border-radius:4px;">SESSION_ROLES</code>
+                </div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-top:0.8rem;" class="reveal">
+            <div style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.12);border-left:3px solid #d6a84f;border-radius:8px;padding:0.7rem 1rem;font-size:0.78rem;">
+                <strong style="color:#d6a84f;">Roles predefinidas:</strong> <span style="color:#d9b4c2;">CONNECT, RESOURCE e DBA — já existem no Oracle por padrão.</span>
+            </div>
+            <div style="background:rgba(255,120,159,0.07);border:1px solid rgba(255,120,159,0.12);border-left:3px solid #ff789f;border-radius:8px;padding:0.7rem 1rem;font-size:0.78rem;">
+                <strong style="color:#ff789f;">SYSDBA / SYSOPER:</strong> <span style="color:#d9b4c2;">Privilégios especiais para startup, shutdown, backup e recovery do banco.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <span class="slide-counter" id="counter">1 / 10</span>
+</div>
+
+<script>
+    let current = 1;
+    const total = document.querySelectorAll('.slide').length;
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+    function goToSlide(n) {
+        const prev = document.querySelector('.slide.active');
+        const next = document.querySelector(`.slide[data-slide="${n}"]`);
+        if (prev) prev.classList.remove('active');
+        if (next) { next.classList.add('active'); animateSlide(next); }
+        current = n; updateNav();
+    }
+    function changeSlide(dir) { let next = current + dir; if (next < 1) next = total; if (next > total) next = 1; goToSlide(next); }
+    function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => { d.classList.toggle('active', i + 1 === current); }); counter.textContent = current + ' / ' + total; }
+    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1); });
+    function animateSlide(slide) {
+        slide.querySelectorAll('.reveal').forEach((el, i) => {
+            el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+            el.offsetHeight;
+            const delay = i * 0.07;
+            el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+            el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+        });
+    }
+    document.addEventListener('mousemove', (e) => {
+        const spotlight = document.querySelector('.mouse-spotlight');
+        if (spotlight) spotlight.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(255,92,154,0.05), transparent 40%)`;
+    });
+    window.initParticles = function(canvas, options) {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        const interactive = options.interactive !== false;
+        const count = options.count || (interactive ? 55 : 18);
+        let mx = -1000, my = -1000;
+        const particles = Array.from({ length: count }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, size: Math.random() * 2.5 + 0.8, alpha: Math.random() * 0.3 + 0.08 }));
+        if (interactive) { canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; }); canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; }); }
+        (function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                if (interactive) { const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx * dx + dy * dy); if (dist < 120) { const force = (120 - dist) / 120 * 2; p.vx += (dx / dist) * force * 0.1; p.vy += (dy / dist) * force * 0.1; } }
+                p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+                if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,92,154,${p.alpha})`; ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        })();
+    };
+    document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 55 }));
+    document.querySelectorAll('.particle-canvas-ambient').forEach(c => window.initParticles(c, { interactive: false, count: 18 }));
+    try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>

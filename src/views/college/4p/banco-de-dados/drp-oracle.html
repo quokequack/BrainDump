@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Plano de Recuperação de Desastres – Oracle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #160b13;
+            --color-bg-deep: #080407;
+            --color-surface: #2a1320;
+            --color-text: #ffe8f2;
+            --color-text-secondary: #d9b4c2;
+            --color-text-muted: #a98895;
+            --color-accent-1: #d76ba3;
+            --color-accent-2: #e08ab6;
+            --color-accent-3: #ff4f8b;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.09);
+            --color-vignette: rgba(0,0,0,0.5);
+            --font-display: 'Instrument Serif', serif;
+            --font-body: 'Inter', sans-serif;
+        }
+    </style>
+    <style>
+        :root { --color-bg: #160b13; --color-text: #ffe8f2; --glow-color-rgb: 215,107,163; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { background: var(--color-bg); margin: 0; }
+        body { font-family: var(--font-body); color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+        .deck { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+        .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: clamp(1.2rem, 3vw, 3rem); }
+        .nav-controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; z-index: 100; background: var(--color-glass-bg); backdrop-filter: blur(10px); padding: 8px 22px; border-radius: 40px; border: 1px solid var(--color-glass-border); }
+        .nav-btn { width: 36px; height: 36px; border: none; background: var(--color-glass-bg); color: var(--color-accent-1); border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .nav-btn:hover { background: var(--color-glass-border); }
+        .slide-dots { display: flex; gap: 6px; }
+        .slide-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-glass-border); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+        .slide-dots .dot.active { background: var(--color-accent-1); transform: scale(1.3); }
+        .slide-counter { font-size: 0.75rem; color: var(--color-text-muted); min-width: 36px; text-align: center; }
+        .reveal { opacity: 0; transform: translateY(20px); }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+        @keyframes float-slow { 0%{transform:translate(0,0) scale(1)} 25%{transform:translate(55px,-45px) scale(1.1)} 50%{transform:translate(-35px,35px) scale(0.92)} 75%{transform:translate(45px,18px) scale(1.07)} 100%{transform:translate(0,0) scale(1)} }
+        @keyframes float-drift { 0%{transform:translate(0,0) scale(1) rotate(0deg)} 33%{transform:translate(-45px,-55px) scale(1.13) rotate(3deg)} 66%{transform:translate(38px,28px) scale(0.9) rotate(-2deg)} 100%{transform:translate(0,0) scale(1) rotate(0deg)} }
+        .gradient-mesh { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+        .blob { position:absolute; border-radius:50%; filter:blur(80px); animation:float-slow 11s ease-in-out infinite; }
+        .blob:nth-child(2) { animation:float-drift 15s ease-in-out infinite; }
+        .blob:nth-child(3) { animation:float-slow 19s ease-in-out infinite reverse; }
+        .slide::before { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat:repeat; background-size:256px 256px; opacity:0.03; mix-blend-mode:overlay; }
+        .slide::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; background:radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+        code { background: rgba(215,107,163,0.15); border: 1px solid rgba(215,107,163,0.25); border-radius: 4px; padding: 1px 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; color: #f0b6cf; }
+        .code-block { background: rgba(0,0,0,0.4); border: 1px solid rgba(215,107,163,0.2); border-radius: 8px; padding: 0.7rem 0.9rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #f0b6cf; line-height: 1.6; }
+        .tag-pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:.65rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+        @media (max-width: 760px), (max-height: 620px) {
+            html, body { height: 100dvh; overflow: hidden; }
+            body { width: 100%; }
+            .deck { width: 100%; height: 100dvh; }
+            .slide { justify-content: flex-start !important; overflow-x: hidden !important; overflow-y: auto !important; padding: 1rem 0 6rem; }
+            .slide > .content { max-width: 100%; padding: 1.1rem !important; }
+            .slide [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            .slide [style*="display:grid"] { gap: 0.75rem !important; }
+            .slide [style*="display:flex"] { flex-wrap: wrap !important; }
+            .slide [style*="font-size:100px"], .slide [style*="font-size:90px"], .slide [style*="font-size:96px"] { font-size: clamp(3rem, 18vw, 4.5rem) !important; }
+            h1, h2, p, div, span { overflow-wrap: anywhere; }
+            code, .code-block { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+            .code-block { overflow-x: auto; font-size: 0.68rem !important; }
+            table { display: block; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+            .nav-controls { bottom: max(0.75rem, env(safe-area-inset-bottom)); width: calc(100% - 1.5rem); max-width: 28rem; justify-content: center; gap: 0.5rem; padding: 0.5rem 0.65rem; }
+            .nav-btn { width: 2rem; height: 2rem; flex: 0 0 2rem; }
+            .slide-dots { max-width: 45vw; overflow-x: auto; padding: 0.2rem; }
+            .blob { transform: scale(0.72); filter: blur(56px); }
+            canvas { pointer-events: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+
+<!-- SLIDE 1: TÍTULO -->
+<div class="slide active" data-slide="1">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-110px;right:-100px;background:var(--color-accent-1);opacity:.15;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-90px;left:-70px;background:var(--color-accent-3);opacity:.1;"></div>
+        <div class="blob" style="width:220px;height:220px;top:38%;left:12%;background:var(--color-accent-2);opacity:.08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:96px;margin-bottom:.8rem;animation:float 3s ease-in-out infinite;" class="reveal">🚨</div>
+        <h1 class="font-display reveal" style="font-size:clamp(2.2rem,5vw,3.8rem);font-weight:900;background:linear-gradient(135deg,#d76ba3,#e08ab6,#ff4f8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.8rem;line-height:1.1;">Plano de Recuperação<br>de Desastres</h1>
+        <p class="reveal" style="font-size:clamp(.8rem,1.3vw,1.1rem);color:var(--color-text-muted);letter-spacing:5px;text-transform:uppercase;font-weight:300;">Oracle Database · DRP · Continuidade de Negócios</p>
+        <div class="reveal" style="margin-top:1.8rem;display:flex;justify-content:center;gap:.8rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(215,107,163,.15);color:#f0b6cf;border:1px solid rgba(215,107,163,.3);">RTO / RPO</span>
+            <span class="tag-pill" style="background:rgba(255,79,139,.15);color:#ffb0c4;border:1px solid rgba(255,79,139,.3);">CIA – Confidencialidade</span>
+            <span class="tag-pill" style="background:rgba(255,92,154,.15);color:#ffb3cf;border:1px solid rgba(255,92,154,.3);">Data Guard</span>
+            <span class="tag-pill" style="background:rgba(86,199,178,.12);color:#9ee0d3;border:1px solid rgba(86,199,178,.25);">Oracle RAC</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,.15);color:#f0cb77;border:1px solid rgba(214,168,79,.3);">TDE Criptografia</span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 2: AGENDA -->
+<div class="slide" data-slide="2">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-75px;right:-75px;background:var(--color-accent-1);opacity:.08;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-55px;left:-40px;background:var(--color-accent-2);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.8rem,3.8vw,2.6rem);font-weight:700;margin-bottom:1.4rem;">Conteúdo <span style="color:var(--color-accent-2)">deste módulo</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #d76ba3;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.4rem;margin-bottom:.4rem;">🛡️</div>
+                <div style="font-weight:600;font-size:.92rem;margin-bottom:.3rem;">Princípios CIA</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted);">Confidencialidade, Integridade e Disponibilidade — base da segurança da informação</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #ff4f8b;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.4rem;margin-bottom:.4rem;">⚠️</div>
+                <div style="font-weight:600;font-size:.92rem;margin-bottom:.3rem;">Ativos, Ameaças e Riscos</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted);">Software, hardware, dados e pessoas — vulnerabilidades e ameaças naturais/intencionais</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #ff5c9a;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.4rem;margin-bottom:.4rem;">📊</div>
+                <div style="font-weight:600;font-size:.92rem;margin-bottom:.3rem;">Indicadores: RTO e RPO</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted);">MTBF, MTTR, RTO e RPO — métricas que guiam as decisões de proteção e recuperação</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);backdrop-filter:blur(12px);border:1px solid var(--color-glass-border);border-left:4px solid #56c7b2;border-radius:10px;padding:1rem 1.2rem;">
+                <div style="font-size:1.4rem;margin-bottom:.4rem;">📋</div>
+                <div style="font-weight:600;font-size:.92rem;margin-bottom:.3rem;">DRP — Plano de Ação</div>
+                <div style="font-size:.78rem;color:var(--color-text-muted);">Estrutura do plano: ameaça → atividade preventiva → roteiros RMAN pós-incidente</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 3: CIA - PRINCÍPIOS -->
+<div class="slide" data-slide="3">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-75px;right:-75px;background:#ff4f8b;opacity:.09;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-40px;background:var(--color-accent-1);opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff4f8b;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;font-weight:600;margin-bottom:.4rem;">Fundamentos</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.6rem,3.5vw,2.3rem);font-weight:700;margin-bottom:1.2rem;">Tríade CIA — <span style="color:#ffb0c4">Segurança da Informação</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.25);border-radius:10px;padding:1rem;text-align:center;">
+                <div style="font-size:2rem;margin-bottom:.5rem;">🔒</div>
+                <div style="font-weight:700;color:#f0b6cf;font-size:.9rem;margin-bottom:.4rem;">Confidencialidade</div>
+                <div style="font-size:.74rem;color:var(--color-text-muted);line-height:1.5;">Somente a pessoa correta acessa a informação. Oracle: <strong style="color:#ffe8f2">USERS, ROLES, TDE</strong></div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.25);border-radius:10px;padding:1rem;text-align:center;">
+                <div style="font-size:2rem;margin-bottom:.5rem;">✅</div>
+                <div style="font-weight:700;color:#ffb0c4;font-size:.9rem;margin-bottom:.4rem;">Integridade</div>
+                <div style="font-size:.74rem;color:var(--color-text-muted);line-height:1.5;">Informação não alterada de forma indevida. Oracle: <strong style="color:#ffe8f2">Audit, LogMiner, Flashback</strong></div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.25);border-radius:10px;padding:1rem;text-align:center;">
+                <div style="font-size:2rem;margin-bottom:.5rem;">🟢</div>
+                <div style="font-weight:700;color:#9ee0d3;font-size:.9rem;margin-bottom:.4rem;">Disponibilidade</div>
+                <div style="font-size:.74rem;color:var(--color-text-muted);line-height:1.5;">Informação acessível quando necessário. Oracle: <strong style="color:#ffe8f2">RMAN, Data Guard, RAC</strong></div>
+            </div>
+        </div>
+        <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+            <div style="background:rgba(215,107,163,.07);border:1px solid rgba(215,107,163,.18);border-radius:8px;padding:.7rem 1rem;font-size:.76rem;">
+                <strong style="color:#f0b6cf;">Confidencialidade + Integridade:</strong>
+                <span style="color:var(--color-text-secondary);"> Criptografia em trânsito e em repouso, trilhas de auditoria, arquivos de Log.</span>
+            </div>
+            <div style="background:rgba(86,199,178,.06);border:1px solid rgba(86,199,178,.18);border-radius:8px;padding:.7rem 1rem;font-size:.76rem;">
+                <strong style="color:#9ee0d3;">Integridade + Disponibilidade:</strong>
+                <span style="color:var(--color-text-secondary);"> Backup/Recovery, Flashback, PROFILE de recursos, Database Resource Manager.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: AMEAÇAS, ATIVOS E RISCOS -->
+<div class="slide" data-slide="4">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:340px;height:340px;top:-70px;right:-70px;background:#ff4f8b;opacity:.08;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-45px;left:-40px;background:var(--color-accent-2);opacity:.06;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1rem;">Ativos, Ameaças e <span style="color:#ffb0c4">Riscos</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.9rem;">
+            <div class="reveal">
+                <p style="font-size:.78rem;font-weight:600;color:#ffb0c4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Tipos de Ameaças</p>
+                <div style="display:flex;flex-direction:column;gap:.5rem;">
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.2);border-radius:8px;padding:.65rem .9rem;font-size:.76rem;">
+                        <strong style="color:#ffb0c4;">🌪️ Naturais</strong> — fogo, inundação, falta de energia, intempéries
+                    </div>
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.2);border-radius:8px;padding:.65rem .9rem;font-size:.76rem;">
+                        <strong style="color:#ffb0c4;">🎯 Intencionais</strong> — fraudes, sabotagem, espionagem, invasões, furto de dados
+                    </div>
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.2);border-radius:8px;padding:.65rem .9rem;font-size:.76rem;">
+                        <strong style="color:#ffb0c4;">😶 Involuntárias</strong> — erros de usuários, falta de conhecimento, descuido
+                    </div>
+                </div>
+            </div>
+            <div class="reveal">
+                <p style="font-size:.78rem;font-weight:600;color:#f0b6cf;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;">Ativos e Vulnerabilidades</p>
+                <div style="display:flex;flex-direction:column;gap:.5rem;">
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:8px;padding:.6rem .9rem;font-size:.74rem;"><strong style="color:#f0b6cf;">💻 Software</strong> — falhas de atualização, configuração, implementação</div>
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:8px;padding:.6rem .9rem;font-size:.74rem;"><strong style="color:#f0b6cf;">🖥️ Hardware</strong> — infraestrutura elétrica, inundações, falhas físicas</div>
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:8px;padding:.6rem .9rem;font-size:.74rem;"><strong style="color:#f0b6cf;">📁 Dados</strong> — controle de acesso deficiente, política de backup inadequada</div>
+                    <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:8px;padding:.6rem .9rem;font-size:.74rem;"><strong style="color:#f0b6cf;">👥 Pessoas</strong> — resistência às práticas de segurança, descuido</div>
+                </div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:.9rem;background:rgba(214,168,79,.08);border:1px solid rgba(214,168,79,.2);border-radius:8px;padding:.65rem 1rem;font-size:.76rem;color:#f0cb77;">
+            📌 <strong>Risco</strong> = probabilidade de que uma ameaça explore uma vulnerabilidade, causando danos. <em>"A segurança deve ser proporcional ao valor do que se protege."</em> — Thomas Wadlow
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 5: INDICADORES RTO/RPO -->
+<div class="slide" data-slide="5">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-75px;right:-75px;background:#ff5c9a;opacity:.09;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-55px;left:-40px;background:var(--color-accent-1);opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;font-weight:600;margin-bottom:.4rem;">Métricas</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1.2rem;">Indicadores que <span style="color:#ffb3cf">guiam as soluções</span></h2>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.25);border-radius:10px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                    <span style="background:rgba(255,92,154,.2);color:#ffb3cf;border-radius:6px;padding:.2rem .6rem;font-size:.72rem;font-weight:700;">MTBF</span>
+                    <span style="font-weight:600;font-size:.9rem;">Mean Time Between Failure</span>
+                </div>
+                <div style="font-size:.76rem;color:var(--color-text-muted);">Tempo médio entre falhas. Quanto maior, mais confiável o sistema. Mede a <strong style="color:#ffe8f2">frequência</strong> com que falhas ocorrem.</div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.25);border-radius:10px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                    <span style="background:rgba(255,92,154,.2);color:#ffb3cf;border-radius:6px;padding:.2rem .6rem;font-size:.72rem;font-weight:700;">MTTR</span>
+                    <span style="font-weight:600;font-size:.9rem;">Mean Time To Recover</span>
+                </div>
+                <div style="font-size:.76rem;color:var(--color-text-muted);">Tempo médio para recuperação após uma falha. Quanto menor, mais ágil a equipe. Mede a <strong style="color:#ffe8f2">eficiência</strong> do processo de recuperação.</div>
+            </div>
+            <div class="reveal" style="background:rgba(215,107,163,.1);border:2px solid rgba(215,107,163,.35);border-radius:10px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                    <span style="background:#d76ba3;color:#fff;border-radius:6px;padding:.2rem .6rem;font-size:.72rem;font-weight:700;">RTO</span>
+                    <span style="font-weight:600;font-size:.9rem;">Recovery Time Objective</span>
+                </div>
+                <div style="font-size:.76rem;color:var(--color-text-secondary);">Tempo <strong style="color:#f0b6cf">máximo aceitável</strong> para recuperação após incidente. Ex: "O banco deve estar de volta em <strong style="color:#f0b6cf">4 horas</strong>". Define qual tecnologia usar (RMAN, Data Guard, RAC).</div>
+            </div>
+            <div class="reveal" style="background:rgba(255,79,139,.1);border:2px solid rgba(255,79,139,.35);border-radius:10px;padding:1rem;">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+                    <span style="background:#ff4f8b;color:#fff;border-radius:6px;padding:.2rem .6rem;font-size:.72rem;font-weight:700;">RPO</span>
+                    <span style="font-weight:600;font-size:.9rem;">Recovery Point Objective</span>
+                </div>
+                <div style="font-size:.76rem;color:var(--color-text-secondary);">Perda de dados <strong style="color:#ffb0c4">máxima aceitável</strong>. Ex: "Não podemos perder mais de <strong style="color:#ffb0c4">1 hora</strong> de transações". Define frequência do backup e uso de archivelog.</div>
+            </div>
+        </div>
+        <div class="reveal" style="background:rgba(214,168,79,.07);border:1px solid rgba(214,168,79,.2);border-radius:8px;padding:.6rem 1rem;font-size:.75rem;color:#f0cb77;">
+            💡 <strong>RTO pequeno</strong> → Data Guard / RAC (failover automático) &nbsp;|&nbsp; <strong>RPO pequeno</strong> → ARCHIVELOG + RMAN + Data Guard Sync
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: INDISPONIBILIDADE E SOLUÇÕES ORACLE -->
+<div class="slide" data-slide="6">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-48px;left:-40px;background:#56c7b2;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1rem;">Tipos de Indisponibilidade e <span style="color:#9ee0d3">Soluções Oracle</span></h2>
+        <div style="display:flex;flex-direction:column;gap:.7rem;">
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(214,168,79,.25);border-radius:9px;padding:.8rem 1rem;display:grid;grid-template-columns:1fr 2fr;gap:1rem;align-items:start;">
+                <div>
+                    <div style="font-weight:700;color:#f0cb77;font-size:.85rem;margin-bottom:.3rem;">⚡ Lentidão / Indisponibilidade Relativa</div>
+                    <div style="font-size:.72rem;color:var(--color-text-muted);">Usuário consome recursos excessivos</div>
+                </div>
+                <div style="font-size:.75rem;color:var(--color-text-secondary);line-height:1.6;">
+                    <strong style="color:#f0cb77;">Solução:</strong> <code>CREATE PROFILE</code> com limites de <code>CPU_PER_SESSION</code>, <code>SESSIONS_PER_USER</code>, <code>IDLE_TIME</code> + <strong>Database Resource Manager</strong> (DBMS_RESOURCE_MANAGER)
+                </div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.25);border-radius:9px;padding:.8rem 1rem;display:grid;grid-template-columns:1fr 2fr;gap:1rem;align-items:start;">
+                <div>
+                    <div style="font-weight:700;color:#ffb0c4;font-size:.85rem;margin-bottom:.3rem;">🔴 Queda sem Avaria Permanente</div>
+                    <div style="font-size:.72rem;color:var(--color-text-muted);">Ex: falta de energia, crash de instância</div>
+                </div>
+                <div style="font-size:.75rem;color:var(--color-text-secondary);line-height:1.6;">
+                    <strong style="color:#ffb0c4;">Solução:</strong> Recuperação <strong>automática</strong> pelo processo <code>SMON</code> após <code>STARTUP</code>. Configurar <code>FAST_START_MTTR_TARGET</code> para limitar tempo de recovery.
+                </div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.25);border-radius:9px;padding:.8rem 1rem;display:grid;grid-template-columns:1fr 2fr;gap:1rem;align-items:start;">
+                <div>
+                    <div style="font-weight:700;color:#f0b6cf;font-size:.85rem;margin-bottom:.3rem;">🟠 Avaria de Software/Hardware</div>
+                    <div style="font-size:.72rem;color:var(--color-text-muted);">Servidor inutilizado temporariamente</div>
+                </div>
+                <div style="font-size:.75rem;color:var(--color-text-secondary);line-height:1.6;">
+                    <strong style="color:#f0b6cf;">Solução:</strong> <strong>Active Data Guard</strong> (Ativo/Passivo) — standby sempre pronto para assumir. <code>ALTER DATABASE RECOVER MANAGED STANDBY DATABASE</code>
+                </div>
+            </div>
+            <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,92,154,.25);border-radius:9px;padding:.8rem 1rem;display:grid;grid-template-columns:1fr 2fr;gap:1rem;align-items:start;">
+                <div>
+                    <div style="font-weight:700;color:#ffb3cf;font-size:.85rem;margin-bottom:.3rem;">💀 Perda Total do Data Center</div>
+                    <div style="font-size:.72rem;color:var(--color-text-muted);">Catástrofe — prédio, região</div>
+                </div>
+                <div style="font-size:.75rem;color:var(--color-text-secondary);line-height:1.6;">
+                    <strong style="color:#ffb3cf;">Solução:</strong> <strong>Oracle RAC</strong> (Ativo/Ativo) em site remoto + espelhamento ASM + RMAN com backups offsite. <code>DATA GUARD FAR SYNC</code> para RPO zero.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: CONFIDENCIALIDADE - CRIPTOGRAFIA TDE -->
+<div class="slide" data-slide="7">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:#ff4f8b;opacity:.08;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-48px;left:-40px;background:var(--color-accent-1);opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#ff4f8b;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;font-weight:600;margin-bottom:.4rem;">Confidencialidade</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1rem;">Criptografia — <span style="color:#ffb0c4">TDE e Network</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb0c4;margin-bottom:.5rem;">🔐 TDE — Transparent Data Encryption</div>
+                <div class="code-block">-- Criar wallet (keystore)
+ADMINISTER KEY MANAGEMENT
+  CREATE KEYSTORE '/etc/oracle/wallet'
+  IDENTIFIED BY "SenhaForte#1";
+
+-- Abrir keystore
+ADMINISTER KEY MANAGEMENT
+  SET KEYSTORE OPEN
+  IDENTIFIED BY "SenhaForte#1";
+
+-- Ativar chave master
+ADMINISTER KEY MANAGEMENT
+  SET KEY IDENTIFIED BY "SenhaForte#1"
+  WITH BACKUP;
+
+-- Criptografar coluna
+ALTER TABLE hr.employees
+  MODIFY (salary ENCRYPT USING AES256);
+
+-- Criptografar tablespace
+ALTER TABLESPACE ts_dados
+  ENCRYPTION ONLINE ENCRYPT;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#ffb0c4;margin-bottom:.5rem;">🌐 Criptografia em Rede (sqlnet.ora)</div>
+                <div class="code-block">-- sqlnet.ora (servidor)
+SQLNET.ENCRYPTION_SERVER = REQUIRED
+SQLNET.ENCRYPTION_TYPES_SERVER =
+  (AES256, AES192, AES128)
+SQLNET.CRYPTO_CHECKSUM_SERVER =
+  REQUIRED
+
+-- sqlnet.ora (cliente)
+SQLNET.ENCRYPTION_CLIENT = REQUESTED
+SQLNET.ENCRYPTION_TYPES_CLIENT =
+  (AES256)
+
+-- Verificar sessão criptografada
+SELECT network_service_banner
+FROM v$session_connect_info
+WHERE sid = SYS_CONTEXT('USERENV','SID');</div>
+                <div style="margin-top:.8rem;background:rgba(215,107,163,.08);border:1px solid rgba(215,107,163,.2);border-radius:7px;padding:.55rem .8rem;font-size:.72rem;color:var(--color-text-secondary);">
+                    💡 TDE protege dados <strong style="color:#f0b6cf">em repouso</strong> (arquivos, backups). sqlnet.ora protege dados <strong style="color:#f0b6cf">em trânsito</strong> (rede).
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: AUDITORIA -->
+<div class="slide" data-slide="8">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-48px;left:-40px;background:#ff4f8b;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:var(--color-accent-2);text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;font-weight:600;margin-bottom:.4rem;">Trilhas de Auditoria</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1rem;">Unified Auditing — <span style="color:#f0b6cf">Comandos</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">⚙️ Configurar Políticas</div>
+                <div class="code-block">-- Criar política de auditoria
+CREATE AUDIT POLICY pol_dml
+  ACTIONS INSERT, UPDATE, DELETE
+  ON hr.employees;
+
+-- Habilitar política
+AUDIT POLICY pol_dml;
+
+-- Auditoria de sistema (DDL)
+CREATE AUDIT POLICY pol_ddl
+  ACTIONS CREATE TABLE, DROP TABLE,
+          ALTER TABLE;
+AUDIT POLICY pol_ddl;
+
+-- Auditoria de login
+AUDIT POLICY ORA_LOGON_FAILURES;</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.85rem;color:#f0b6cf;margin-bottom:.5rem;">🔍 Consultar Trilhas</div>
+                <div class="code-block">-- Consultar registros de auditoria
+SELECT dbusername, action_name,
+       object_name, event_timestamp,
+       return_code
+FROM unified_audit_trail
+WHERE object_name = 'EMPLOYEES'
+ORDER BY event_timestamp DESC;
+
+-- Logins com falha
+SELECT dbusername, event_timestamp,
+       return_code
+FROM unified_audit_trail
+WHERE action_name = 'LOGON'
+AND return_code != 0;
+
+-- Ver políticas ativas
+SELECT * FROM audit_unified_policies
+WHERE enabled_opt = 'BY SESSION';</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:.8rem;display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;">
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:7px;padding:.55rem;text-align:center;font-size:.7rem;">
+                <div style="color:#f0b6cf;font-weight:700;">UNIFIED_AUDIT_TRAIL</div>
+                <div style="color:var(--color-text-muted);">Trilha consolidada</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:7px;padding:.55rem;text-align:center;font-size:.7rem;">
+                <div style="color:#f0b6cf;font-weight:700;">DBA_AUDIT_POLICIES</div>
+                <div style="color:var(--color-text-muted);">Políticas definidas</div>
+            </div>
+            <div style="background:var(--color-glass-bg);border:1px solid rgba(215,107,163,.2);border-radius:7px;padding:.55rem;text-align:center;font-size:.7rem;">
+                <div style="color:#f0b6cf;font-weight:700;">V$XML_AUDIT_TRAIL</div>
+                <div style="color:var(--color-text-muted);">Auditoria em XML</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: DRP - PLANO DE AÇÃO -->
+<div class="slide" data-slide="9">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:#56c7b2;opacity:.08;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-48px;left:-40px;background:var(--color-accent-1);opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#56c7b2;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem;font-weight:600;margin-bottom:.4rem;">PCN / DRP</p>
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1rem;">Plano de Continuidade — <span style="color:#9ee0d3">Estrutura PLN-100</span></h2>
+        <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(86,199,178,.2);border-radius:10px;overflow:hidden;margin-bottom:.9rem;">
+            <div style="background:rgba(86,199,178,.12);padding:.5rem 1rem;font-size:.75rem;font-weight:700;color:#9ee0d3;letter-spacing:.05em;">PLANO DE RECUPERAÇÃO DE DESASTRE: PLN-100 — Perda de DataFiles do banco PRODUCAO</div>
+            <table style="width:100%;border-collapse:collapse;font-size:.72rem;">
+                <thead>
+                    <tr style="background:rgba(86,199,178,.08);">
+                        <th style="padding:.45rem .8rem;text-align:left;color:#9ee0d3;border-bottom:1px solid rgba(86,199,178,.15);width:40%;">Atividade Preventiva</th>
+                        <th style="padding:.45rem .8rem;text-align:left;color:#9ee0d3;border-bottom:1px solid rgba(86,199,178,.15);width:30%;">Periodicidade</th>
+                        <th style="padding:.45rem .8rem;text-align:left;color:#9ee0d3;border-bottom:1px solid rgba(86,199,178,.15);">Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);">Conferir log do backup completo</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">Seg–Sex às 8h</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);">Testar backup — recovery em ambiente de teste</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">Sábado às 8h</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="reveal" style="background:var(--color-glass-bg);border:1px solid rgba(255,79,139,.2);border-radius:10px;overflow:hidden;">
+            <div style="background:rgba(255,79,139,.1);padding:.5rem 1rem;font-size:.75rem;font-weight:700;color:#ffb0c4;letter-spacing:.05em;">APÓS A AMEAÇA SE CONCRETIZAR</div>
+            <table style="width:100%;border-collapse:collapse;font-size:.72rem;">
+                <tbody>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);width:45%;">Comunicar ao Gerente de Dados</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">O mais rápido possível</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);">Restaurar arquivos danificados da FRA</td>
+                        <td style="padding:.4rem .8rem;color:#ffb0c4;font-weight:600;font-family:monospace;">ROTEIRO-01</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);">Complementar restore do backup em disco</td>
+                        <td style="padding:.4rem .8rem;color:#ffb0c4;font-weight:600;font-family:monospace;">ROTEIRO-02</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-secondary);">Complementar restore do backup em Fita</td>
+                        <td style="padding:.4rem .8rem;color:#ffb0c4;font-weight:600;font-family:monospace;">ROTEIRO-03</td>
+                        <td style="padding:.4rem .8rem;color:var(--color-text-muted);">DBA</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: DRP - ROTEIROS RMAN -->
+<div class="slide" data-slide="10">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-48px;left:-40px;background:#56c7b2;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3vw,2rem);font-weight:700;margin-bottom:1rem;">Roteiros de Recovery — <span style="color:#ffb3cf">RMAN Passo a Passo</span></h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.82rem;color:#9ee0d3;margin-bottom:.4rem;">📋 ROTEIRO-01 — Restaurar da FRA</div>
+                <div class="code-block">-- Identificar arquivo danificado
+SELECT file#, name, status
+FROM v$datafile WHERE status='RECOVER';
+
+-- Conectar RMAN
+RMAN TARGET /
+
+-- Restaurar datafile específico
+RUN {
+  SQL "ALTER DATABASE DATAFILE 5
+       OFFLINE";
+  RESTORE DATAFILE 5;
+  RECOVER DATAFILE 5;
+  SQL "ALTER DATABASE DATAFILE 5
+       ONLINE";
+}</div>
+            </div>
+            <div class="reveal">
+                <div style="font-weight:600;font-size:.82rem;color:#ffb3cf;margin-bottom:.4rem;">📋 ROTEIRO-02 — Restore do Backup em Disco</div>
+                <div class="code-block">-- Especificar localização do backup
+RMAN> CATALOG START WITH
+  '/u01/backup/';
+
+-- Listar backups disponíveis
+RMAN> LIST BACKUP OF DATAFILE 5;
+
+-- Restaurar a partir do backup
+RUN {
+  SET UNTIL SCN <ultimo_scn_valido>;
+  RESTORE DATAFILE 5;
+  RECOVER DATAFILE 5;
+  SQL "ALTER DATABASE DATAFILE 5
+       ONLINE";
+}
+
+-- Verificar consistência
+RMAN> VALIDATE DATABASE;</div>
+            </div>
+        </div>
+        <div class="reveal" style="margin-top:.8rem;background:rgba(214,168,79,.07);border:1px solid rgba(214,168,79,.2);border-radius:8px;padding:.6rem 1rem;font-size:.74rem;color:#f0cb77;">
+            ⚠️ ROTEIRO-03 (Fita): mesma lógica do ROTEIRO-02, mas primeiro <code>CATALOG</code> aponta para o dispositivo de fita. Necessário ter RMAN configurado com <code>CONFIGURE CHANNEL DEVICE TYPE SBT</code>.
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 11: MAPEAMENTO AMEAÇA → SOLUÇÃO -->
+<div class="slide" data-slide="11">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:345px;height:345px;top:-72px;right:-72px;background:var(--color-accent-1);opacity:.09;"></div>
+        <div class="blob" style="width:215px;height:215px;bottom:-48px;left:-40px;background:#ff4f8b;opacity:.07;"></div>
+    </div>
+    <div class="content">
+        <h2 class="font-display reveal" style="font-size:clamp(1.5rem,3.2vw,2.2rem);font-weight:700;margin-bottom:1.1rem;">Ameaça <span style="color:#f0b6cf">→</span> Recurso Oracle</h2>
+        <div style="overflow:hidden;border-radius:10px;border:1px solid var(--color-glass-border);" class="reveal">
+            <table style="width:100%;border-collapse:collapse;font-size:.74rem;">
+                <thead>
+                    <tr style="background:rgba(215,107,163,.15);">
+                        <th style="padding:.5rem .8rem;text-align:left;color:#f0b6cf;font-weight:600;">Ameaça / Problema</th>
+                        <th style="padding:.5rem .8rem;text-align:left;color:#f0b6cf;font-weight:600;">Recurso Oracle</th>
+                        <th style="padding:.5rem .8rem;text-align:left;color:#f0b6cf;font-weight:600;">Comando / Objeto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Acesso indevido a dados</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">Users / Roles / Profiles</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">GRANT, REVOKE, CREATE ROLE</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Espionagem de dados em trânsito</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">Network Encryption</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">sqlnet.ora ENCRYPTION_SERVER</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Roubo de datafiles / backup</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">TDE</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">ALTER TABLESPACE ENCRYPT</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">UPDATE/DELETE errado pelo usuário</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">Flashback / LogMiner</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">AS OF SCN, TRANSACTION_BACKOUT</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">DROP TABLE acidental</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">Flashback Drop</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">FLASHBACK TABLE t TO BEFORE DROP</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Usuário sobrecarrega o sistema</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">PROFILE / Resource Manager</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">CPU_PER_SESSION, IDLE_TIME</td>
+                    </tr>
+                    <tr style="border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);">
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Perda de datafiles / corrupção</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">RMAN</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">RESTORE/RECOVER DATABASE</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:.45rem .8rem;color:var(--color-text-secondary);">Queda / catástrofe total</td>
+                        <td style="padding:.45rem .8rem;color:#f0cb77;">Data Guard / Oracle RAC</td>
+                        <td style="padding:.45rem .8rem;font-family:monospace;color:#e08ab6;font-size:.7rem;">FAILOVER / SWITCHOVER</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 12: ENCERRAMENTO -->
+<div class="slide" data-slide="12">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:520px;height:520px;top:-110px;right:-100px;background:var(--color-accent-1);opacity:.14;"></div>
+        <div class="blob" style="width:320px;height:320px;bottom:-90px;left:-70px;background:#ff4f8b;opacity:.1;"></div>
+        <div class="blob" style="width:200px;height:200px;top:35%;left:10%;background:var(--color-accent-2);opacity:.08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:88px;margin-bottom:.8rem;animation:float 3s ease-in-out infinite;" class="reveal">🎯</div>
+        <h1 class="font-display reveal" style="font-size:clamp(2rem,5vw,3.6rem);font-weight:900;background:linear-gradient(135deg,#d76ba3,#e08ab6,#ff4f8b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.8rem;">Bons Estudos!</h1>
+        <p class="reveal" style="font-size:clamp(.8rem,1.3vw,1.05rem);color:var(--color-text-muted);letter-spacing:4px;text-transform:uppercase;margin-bottom:1.5rem;">Plano de Recuperação de Desastres — Oracle</p>
+        <div class="reveal" style="display:flex;justify-content:center;gap:.7rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(255,79,139,.15);color:#ffb0c4;border:1px solid rgba(255,79,139,.3);">CIA — Confidencialidade · Integridade · Disponibilidade</span>
+            <span class="tag-pill" style="background:rgba(215,107,163,.15);color:#f0b6cf;border:1px solid rgba(215,107,163,.3);">RTO / RPO</span>
+            <span class="tag-pill" style="background:rgba(86,199,178,.12);color:#9ee0d3;border:1px solid rgba(86,199,178,.25);">DRP · PCN</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,.15);color:#f0cb77;border:1px solid rgba(214,168,79,.3);">TDE · Audit · RMAN · Data Guard</span>
+        </div>
+    </div>
+</div>
+
+</div><!-- end .deck -->
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <span class="slide-counter" id="counter">1 / 12</span>
+</div>
+<script>
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('counter');
+for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+function goToSlide(n) {
+    const prev = document.querySelector('.slide.active');
+    const next = document.querySelector(`.slide[data-slide="${n}"]`);
+    if (prev) prev.classList.remove('active');
+    if (next) { next.classList.add('active'); animateSlide(next); }
+    current = n; updateNav();
+}
+function changeSlide(dir) { let n = current + dir; if (n < 1) n = total; if (n > total) n = 1; goToSlide(n); }
+function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === current)); counter.textContent = current + ' / ' + total; }
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+let tx = 0;
+document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+document.addEventListener('touchend', e => { const d = tx - e.changedTouches[0].clientX; if (Math.abs(d) > 50) changeSlide(d > 0 ? 1 : -1); });
+function animateSlide(slide) {
+    slide.querySelectorAll('.reveal').forEach((el, i) => {
+        el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)'; el.offsetHeight;
+        el.style.transition = `opacity 0.35s ease ${i*0.08}s, transform 0.35s ease ${i*0.08}s`;
+        el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+    });
+}
+document.addEventListener('mousemove', e => {
+    const s = document.querySelector('.mouse-spotlight');
+    if (s) s.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(215,107,163,0.06), transparent 40%)`;
+});
+window.initParticles = function(canvas, opts) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d'); canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+    let mx = -1000, my = -1000;
+    const ps = Array.from({length: opts.count||55}, () => ({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3, size:Math.random()*2.5+.8, alpha:Math.random()*.35+.1 }));
+    canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); mx = e.clientX-r.left; my = e.clientY-r.top; });
+    canvas.addEventListener('mouseleave', () => { mx=-1000; my=-1000; });
+    (function a() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ps.forEach(p => {
+            const dx=p.x-mx,dy=p.y-my,d=Math.sqrt(dx*dx+dy*dy);
+            if(d<120){const f=(120-d)/120*2;p.vx+=(dx/d)*f*.1;p.vy+=(dy/d)*f*.1;}
+            p.vx*=.98;p.vy*=.98;p.x+=p.vx;p.y+=p.vy;
+            if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;
+            if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;
+            ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(215,107,163,${p.alpha})`;ctx.fill();
+        });
+        requestAnimationFrame(a);
+    })();
+};
+document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, {count:55}));
+try { animateSlide(document.querySelector('.slide.active')); } catch(e){}
+</script>
+</body>
+</html>

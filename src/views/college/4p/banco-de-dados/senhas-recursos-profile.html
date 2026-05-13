@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="slides-format" content="viewport">
+    <title>Segurança em BD — Senhas e Recursos (PROFILE)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+        @theme {
+            --color-bg: #160b13;
+            --color-bg-deep: #080407;
+            --color-surface: #2a1320;
+            --color-text: #ffe8f2;
+            --color-text-secondary: #d9b4c2;
+            --color-text-muted: #a98895;
+            --color-accent-1: #e08ab6;
+            --color-accent-2: #f472b6;
+            --color-accent-3: #ff5c9a;
+            --color-glass-bg: rgba(255,255,255,0.05);
+            --color-glass-border: rgba(255,255,255,0.08);
+            --color-vignette: rgba(0,0,0,0.45);
+            --font-display: 'JetBrains Mono', monospace;
+            --font-body: 'Inter', sans-serif;
+        }
+    </style>
+    <style>
+        :root { --color-bg: #160b13; --color-text: #ffe8f2; --glow-color-rgb: 224,138,182; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { background: var(--color-bg); margin: 0; }
+        body { font-family: 'Inter', sans-serif; color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+        .deck { width: 100vw; height: 100vh; position: relative; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+        .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+        .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: clamp(1.5rem, 4vw, 3.5rem); }
+        .nav-controls { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 10px 24px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); }
+        .nav-btn { width: 38px; height: 38px; border: none; background: rgba(255,255,255,0.06); color: #e08ab6; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .nav-btn:hover { background: rgba(224,138,182,0.18); }
+        .slide-dots { display: flex; gap: 8px; }
+        .slide-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+        .slide-dots .dot.active { background: #e08ab6; transform: scale(1.3); }
+        .slide-counter { font-size: 0.75rem; color: #a98895; min-width: 40px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+        .reveal { opacity: 0; transform: translateY(20px); }
+        @keyframes glow-pulse { 0%, 100% { text-shadow: 0 0 20px rgba(224,138,182,0.5), 0 0 40px rgba(224,138,182,0.2); } 50% { text-shadow: 0 0 30px rgba(224,138,182,0.8), 0 0 60px rgba(224,138,182,0.3); } }
+        .glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+        @keyframes float-slow { 0% { transform: translate(0,0) scale(1); } 25% { transform: translate(60px,-50px) scale(1.12); } 50% { transform: translate(-40px,40px) scale(0.9); } 75% { transform: translate(50px,20px) scale(1.08); } 100% { transform: translate(0,0) scale(1); } }
+        @keyframes float-drift { 0% { transform: translate(0,0) scale(1) rotate(0deg); } 33% { transform: translate(-50px,-60px) scale(1.15) rotate(3deg); } 66% { transform: translate(40px,30px) scale(0.88) rotate(-2deg); } 100% { transform: translate(0,0) scale(1) rotate(0deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .gradient-mesh { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(80px); animation: float-slow 10s ease-in-out infinite; }
+        .blob:nth-child(2) { animation: float-drift 14s ease-in-out infinite; }
+        .blob:nth-child(3) { animation: float-slow 18s ease-in-out infinite reverse; }
+        .slide::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 256px 256px; opacity: 0.03; mix-blend-mode: overlay; }
+        .slide::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+        .code-block { background: rgba(224,138,182,0.06); border: 1px solid rgba(224,138,182,0.15); border-left: 3px solid #e08ab6; border-radius: 8px; padding: 0.8rem 1.2rem; font-size: clamp(0.68rem, 1.1vw, 0.82rem); color: #f0b6cf; line-height: 1.8; font-family: 'JetBrains Mono', monospace; }
+        .code-block .kw { color: #f472b6; font-weight: 700; }
+        .code-block .val { color: #56c7b2; }
+        .code-block .cmt { color: #7f5b67; font-style: italic; }
+        .code-block .num { color: #d6a84f; }
+        .tag-pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+        .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(224,138,182,0.12); }
+        @media (max-width: 760px), (max-height: 620px) {
+            html, body { height: 100dvh; overflow: hidden; }
+            body { width: 100%; }
+            .deck { width: 100%; height: 100dvh; }
+            .slide { justify-content: flex-start !important; overflow-x: hidden !important; overflow-y: auto !important; padding: 1rem 0 6rem; }
+            .slide > .content { max-width: 100%; padding: 1.1rem !important; }
+            .slide [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            .slide [style*="display:grid"] { gap: 0.75rem !important; }
+            .slide [style*="display:flex"] { flex-wrap: wrap !important; }
+            .slide [style*="font-size:100px"], .slide [style*="font-size:90px"], .slide [style*="font-size:96px"] { font-size: clamp(3rem, 18vw, 4.5rem) !important; }
+            h1, h2, p, div, span { overflow-wrap: anywhere; }
+            code, .code-block { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+            .code-block { overflow-x: auto; font-size: 0.68rem !important; }
+            table { display: block; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+            .nav-controls { bottom: max(0.75rem, env(safe-area-inset-bottom)); width: calc(100% - 1.5rem); max-width: 28rem; justify-content: center; gap: 0.5rem; padding: 0.5rem 0.65rem; }
+            .nav-btn { width: 2rem; height: 2rem; flex: 0 0 2rem; }
+            .slide-dots { max-width: 45vw; overflow-x: auto; padding: 0.2rem; }
+            .blob { transform: scale(0.72); filter: blur(56px); }
+            canvas { pointer-events: none; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; } }
+    </style>
+</head>
+<body>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide slide-1 active" data-slide="1">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:500px;height:500px;top:-120px;right:-100px;background:#e08ab6;opacity:0.13;"></div>
+        <div class="blob" style="width:350px;height:350px;bottom:-80px;left:-60px;background:#f472b6;opacity:0.1;"></div>
+        <div class="blob" style="width:220px;height:220px;top:45%;left:20%;background:#ff5c9a;opacity:0.07;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content text-center">
+        <div style="font-size:90px;margin-bottom:1rem;animation:float 3s ease-in-out infinite;" class="reveal">🛡️</div>
+        <h1 class="reveal glow-pulse" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.8rem,4.5vw,3.5rem);font-weight:900;background:linear-gradient(135deg,#e08ab6,#f472b6,#ff5c9a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em;margin-bottom:0.8rem;">Segurança em Banco de Dados</h1>
+        <p class="reveal" style="font-size:clamp(0.8rem,1.4vw,1rem);color:#a98895;letter-spacing:0.3em;text-transform:uppercase;">Perfis de Senha e Recursos — Oracle SQL</p>
+        <div class="reveal" style="margin-top:2rem;display:flex;justify-content:center;gap:0.8rem;flex-wrap:wrap;">
+            <span class="tag-pill" style="background:rgba(224,138,182,0.12);color:#e08ab6;border:1px solid rgba(224,138,182,0.2);">CREATE PROFILE</span>
+            <span class="tag-pill" style="background:rgba(244,114,182,0.12);color:#f472b6;border:1px solid rgba(244,114,182,0.2);">ALTER PROFILE</span>
+            <span class="tag-pill" style="background:rgba(255,92,154,0.12);color:#ff5c9a;border:1px solid rgba(255,92,154,0.2);">DROP PROFILE</span>
+            <span class="tag-pill" style="background:rgba(214,168,79,0.12);color:#d6a84f;border:1px solid rgba(214,168,79,0.2);">ALTER SYSTEM</span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 2: AGENDA -->
+<div class="slide slide-2" data-slide="2">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:350px;height:350px;top:-80px;right:-60px;background:#e08ab6;opacity:0.07;"></div>
+        <div class="blob" style="width:250px;height:250px;bottom:-50px;left:-40px;background:#f472b6;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#e08ab6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.5rem;">Conteúdo</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.7rem,3.2vw,2.4rem);font-weight:800;margin-bottom:1.8rem;">O que vamos aprender?</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;" class="reveal">
+            <div class="card-hover" style="background:rgba(224,138,182,0.06);border:1px solid rgba(224,138,182,0.12);border-left:3px solid #e08ab6;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🔐</div>
+                <div style="color:#e08ab6;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem;">01 — O que é PROFILE?</div>
+                <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">Regras e limites por usuário · DEFAULT profile · Sessões atuais não afetadas</div>
+            </div>
+            <div class="card-hover" style="background:rgba(244,114,182,0.06);border:1px solid rgba(244,114,182,0.12);border-left:3px solid #f472b6;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🔑</div>
+                <div style="color:#f472b6;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem;">02 — Segurança de Senhas</div>
+                <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">FAILED_LOGIN_ATTEMPTS · PASSWORD_LOCK_TIME · LIFE_TIME · GRACE_TIME · REUSE · VERIFY_FUNCTION</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-left:3px solid #ff5c9a;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">⚙️</div>
+                <div style="color:#ff5c9a;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem;">03 — Limites de Recursos</div>
+                <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">Nível de Sessão e Chamada · CPU · I/O · IDLE_TIME · COMPOSITE_LIMIT · RESOURCE_LIMIT</div>
+            </div>
+            <div class="card-hover" style="background:rgba(214,168,79,0.06);border:1px solid rgba(214,168,79,0.12);border-left:3px solid #d6a84f;border-radius:10px;padding:1.2rem 1.5rem;">
+                <div style="font-size:1.8rem;margin-bottom:0.5rem;">🛠️</div>
+                <div style="color:#d6a84f;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem;">04 — Criar, Alterar e Remover</div>
+                <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">CREATE · ALTER · DROP PROFILE · CASCADE · Views DBA_PROFILES · DBA_USERS</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 3: O QUE É PROFILE -->
+<div class="slide slide-3" data-slide="3">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-100px;right:-70px;background:#e08ab6;opacity:0.08;"></div>
+        <div class="blob" style="width:200px;height:200px;bottom:-40px;left:-30px;background:#ff5c9a;opacity:0.06;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#e08ab6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">01 — PROFILE</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.5rem,2.8vw,2.2rem);font-weight:800;margin-bottom:1.2rem;">O que é um Perfil (PROFILE)?</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+            <div style="display:flex;flex-direction:column;gap:0.7rem;" class="reveal">
+                <div style="background:rgba(224,138,182,0.07);border:1px solid rgba(224,138,182,0.13);border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="color:#e08ab6;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:'JetBrains Mono',monospace;">📦 Definição</div>
+                    <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">Conjunto nomeado de <strong style="color:#ffe8f2;">regras e limites</strong> para senha e uso de recursos. Atribuído a usuários na criação ou via <code style="color:#e08ab6;font-size:0.78rem;">ALTER USER</code>.</div>
+                </div>
+                <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.13);border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="color:#56c7b2;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:'JetBrains Mono',monospace;">✅ Pode</div>
+                    <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">Estar <strong style="color:#ffe8f2;">ativado ou desativado</strong>. Ser atribuído a múltiplos usuários. Ser alterado a qualquer momento.</div>
+                </div>
+                <div style="background:rgba(255,120,159,0.07);border:1px solid rgba(255,120,159,0.13);border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="color:#ff789f;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.3rem;font-family:'JetBrains Mono',monospace;">❌ Não pode</div>
+                    <div style="color:#d9b4c2;font-size:0.82rem;line-height:1.5;">Ser atribuído a <strong style="color:#ffe8f2;">ROLES ou outros PROFILEs</strong>. Afetar <strong style="color:#ffe8f2;">sessões já ativas</strong> no momento da alteração.</div>
+                </div>
+            </div>
+            <div class="reveal">
+                <div style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.13);border-left:3px solid #d6a84f;border-radius:10px;padding:1rem 1.2rem;margin-bottom:0.8rem;">
+                    <div style="color:#d6a84f;font-weight:700;font-size:0.85rem;margin-bottom:0.4rem;">⭐ PROFILE DEFAULT</div>
+                    <div style="color:#d9b4c2;font-size:0.8rem;line-height:1.5;">Todo usuário criado sem especificar um profile recebe automaticamente o <strong style="color:#ffe8f2;">DEFAULT</strong>. Ele <strong style="color:#ff789f;">não pode ser eliminado</strong>, mas pode ser alterado.</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem 1.2rem;">
+                    <div style="color:#e08ab6;font-weight:700;font-size:0.85rem;margin-bottom:0.6rem;">📋 Dois grupos de parâmetros</div>
+                    <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                        <div style="display:flex;align-items:center;gap:0.6rem;"><span style="width:10px;height:10px;border-radius:50%;background:#f472b6;flex-shrink:0;"></span><span style="color:#d9b4c2;font-size:0.8rem;"><strong style="color:#f472b6;">Senhas</strong> — controle de complexidade, bloqueio, expiração e histórico</span></div>
+                        <div style="display:flex;align-items:center;gap:0.6rem;"><span style="width:10px;height:10px;border-radius:50%;background:#ff5c9a;flex-shrink:0;"></span><span style="color:#d9b4c2;font-size:0.8rem;"><strong style="color:#ff5c9a;">Recursos</strong> — CPU, I/O, sessões simultâneas, tempo de inatividade</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: SENHAS — BLOQUEIO E EXPIRAÇÃO -->
+<div class="slide slide-4" data-slide="4">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-90px;right:-70px;background:#f472b6;opacity:0.08;"></div>
+        <div class="blob" style="width:210px;height:210px;bottom:-50px;left:-30px;background:#e08ab6;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#f472b6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">02 — Senhas</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.6vw,2rem);font-weight:800;margin-bottom:1.1rem;">Bloqueio de Conta &amp; Expiração</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#f472b6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🔒 Bloqueio de Conta</p>
+                <div style="display:flex;flex-direction:column;gap:0.6rem;" class="reveal">
+                    <div style="background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#f472b6;font-size:0.8rem;font-weight:700;">FAILED_LOGIN_ATTEMPTS</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Número de tentativas de login <strong style="color:#ffe8f2;">malsucedidas</strong> antes de bloquear a conta. Ex: <code style="color:#d6a84f;">3</code> tentativas.</div>
+                    </div>
+                    <div style="background:rgba(244,114,182,0.07);border:1px solid rgba(244,114,182,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#f472b6;font-size:0.8rem;font-weight:700;">PASSWORD_LOCK_TIME</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Quantos <strong style="color:#ffe8f2;">dias</strong> a conta fica bloqueada após exceder as tentativas. Use <code style="color:#d6a84f;">1/1440</code> para 1 minuto.</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#e08ab6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">⏰ Expiração e Vencimento</p>
+                <div style="display:flex;flex-direction:column;gap:0.6rem;" class="reveal">
+                    <div style="background:rgba(224,138,182,0.07);border:1px solid rgba(224,138,182,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#e08ab6;font-size:0.8rem;font-weight:700;">PASSWORD_LIFE_TIME</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Duração da senha em <strong style="color:#ffe8f2;">dias</strong>. Após esse período a senha expira. Ex: <code style="color:#d6a84f;">30</code> dias.</div>
+                    </div>
+                    <div style="background:rgba(224,138,182,0.07);border:1px solid rgba(224,138,182,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#e08ab6;font-size:0.8rem;font-weight:700;">PASSWORD_GRACE_TIME</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Período de tolerância em <strong style="color:#ffe8f2;">dias</strong> para troca após o primeiro login com a senha expirada. Ex: <code style="color:#d6a84f;">5</code> dias.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="reveal" style="background:rgba(255,92,154,0.07);border:1px solid rgba(255,92,154,0.13);border-radius:8px;padding:0.7rem 1.2rem;margin-top:0.8rem;font-size:0.8rem;">
+            <strong style="color:#ff5c9a;">⏱️ Frações de dia:</strong> <span style="color:#d9b4c2;">Para períodos menores que 1 dia, use frações. Ex: 1 hora = <code style="color:#d6a84f;">1/24</code> | 5 minutos = <code style="color:#d6a84f;">5/1440</code></span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 5: SENHAS — HISTÓRICO E VERIFICAÇÃO -->
+<div class="slide slide-5" data-slide="5">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:380px;height:380px;top:-90px;left:-60px;background:#e08ab6;opacity:0.08;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;right:-40px;background:#56c7b2;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#f472b6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">02 — Senhas</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.6vw,2rem);font-weight:800;margin-bottom:1.1rem;">Histórico &amp; Verificação de Complexidade</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#56c7b2;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🔁 Histórico de Senha</p>
+                <div style="display:flex;flex-direction:column;gap:0.6rem;" class="reveal">
+                    <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#56c7b2;font-size:0.8rem;font-weight:700;">PASSWORD_REUSE_TIME</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Número de <strong style="color:#ffe8f2;">dias</strong> que devem passar antes de reutilizar a mesma senha.</div>
+                    </div>
+                    <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.13);border-radius:8px;padding:0.8rem 1rem;">
+                        <code style="color:#56c7b2;font-size:0.8rem;font-weight:700;">PASSWORD_REUSE_MAX</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Número de <strong style="color:#ffe8f2;">vezes</strong> que a senha precisa ser trocada antes de poder reutilizá-la.</div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#e08ab6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🔍 Verificação de Complexidade</p>
+                <div class="reveal" style="background:rgba(224,138,182,0.07);border:1px solid rgba(224,138,182,0.13);border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.6rem;">
+                    <code style="color:#e08ab6;font-size:0.8rem;font-weight:700;">PASSWORD_VERIFY_FUNCTION</code>
+                    <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Função PL/SQL que valida a senha. Pode ser a <strong style="color:#ffe8f2;">VERIFY_FUNCTION</strong> do Oracle ou uma criada pelo DBA.</div>
+                </div>
+                <div class="reveal" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.85rem 1rem;">
+                    <div style="color:#d6a84f;font-size:0.75rem;font-weight:700;margin-bottom:0.4rem;">Regras da VERIFY_FUNCTION (Oracle):</div>
+                    <ul style="color:#d9b4c2;font-size:0.77rem;line-height:1.6;margin:0;padding-left:1.2rem;">
+                        <li>Mínimo de <strong style="color:#ffe8f2;">4 caracteres</strong></li>
+                        <li>Não pode ser igual ao <strong style="color:#ffe8f2;">nome do usuário</strong></li>
+                        <li>Pelo menos <strong style="color:#ffe8f2;">1 letra, 1 número e 1 especial</strong></li>
+                        <li>Pelo menos <strong style="color:#ffe8f2;">3 letras diferentes</strong> da senha anterior</li>
+                        <li>Criada pelo script <code style="color:#e08ab6;">utlpwdmg.sql</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: LIMITES DE RECURSOS — SESSÃO -->
+<div class="slide slide-6" data-slide="6">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-90px;right:-70px;background:#ff5c9a;opacity:0.08;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-30px;background:#e08ab6;opacity:0.06;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#ff5c9a;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">03 — Recursos</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.6vw,2rem);font-weight:800;margin-bottom:1.1rem;">Limites de Recursos — Nível de Sessão</h2>
+        <p class="reveal" style="color:#d9b4c2;font-size:0.82rem;margin-bottom:0.9rem;">Aplicados <strong style="color:#ff5c9a;">a cada conexão</strong>. Ao exceder, o usuário é <strong style="color:#ff789f;">desconectado</strong> (erro ORA-02391).</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.8rem;" class="reveal">
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">SESSIONS_PER_USER</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Número de sessões <strong style="color:#ffe8f2;">simultâneas</strong> permitidas para o usuário.</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">CONNECT_TIME</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Tempo máximo de conexão em <strong style="color:#ffe8f2;">minutos</strong>.</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">IDLE_TIME</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Período máximo de <strong style="color:#ffe8f2;">inatividade</strong> em minutos.</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">CPU_PER_SESSION</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Tempo total de CPU em <strong style="color:#ffe8f2;">centésimos de segundo</strong>.</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">LOGICAL_READS_PER_SESSION</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Número de <strong style="color:#ffe8f2;">blocos</strong> lidos (físicos + lógicos).</div>
+            </div>
+            <div class="card-hover" style="background:rgba(255,92,154,0.06);border:1px solid rgba(255,92,154,0.12);border-radius:10px;padding:0.9rem 1rem;">
+                <code style="color:#ff5c9a;font-size:0.77rem;font-weight:700;display:block;margin-bottom:0.35rem;">PRIVATE_SGA</code>
+                <div style="color:#d9b4c2;font-size:0.76rem;line-height:1.4;">Espaço privado na SGA em <strong style="color:#ffe8f2;">bytes</strong> (apenas Shared Server).</div>
+            </div>
+        </div>
+        <div class="reveal" style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.13);border-radius:8px;padding:0.7rem 1.1rem;margin-top:0.8rem;font-size:0.79rem;">
+            <strong style="color:#d6a84f;">COMPOSITE_LIMIT:</strong> <span style="color:#d9b4c2;">Limite ponderado que combina CONNECT_TIME + CPU_PER_SESSION + LOGICAL_READS + PRIVATE_SGA em "unidades de serviço". Modificado via <code style="color:#d6a84f;">ALTER RESOURCE_COST</code>.</span>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: LIMITES — CHAMADA + ATIVAR -->
+<div class="slide slide-7" data-slide="7">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:360px;height:360px;top:-80px;left:-50px;background:#56c7b2;opacity:0.07;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;right:-30px;background:#ff5c9a;opacity:0.06;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#56c7b2;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">03 — Recursos</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;margin-bottom:1.1rem;">Limites por Chamada &amp; Ativação</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#56c7b2;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">⚡ Nível de Chamada (por instrução SQL)</p>
+                <div style="display:flex;flex-direction:column;gap:0.6rem;" class="reveal">
+                    <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.13);border-left:3px solid #56c7b2;border-radius:8px;padding:0.85rem 1rem;">
+                        <code style="color:#56c7b2;font-size:0.8rem;font-weight:700;">CPU_PER_CALL</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Tempo de CPU por instrução em <strong style="color:#ffe8f2;">centésimos de segundo</strong>.</div>
+                    </div>
+                    <div style="background:rgba(86,199,178,0.07);border:1px solid rgba(86,199,178,0.13);border-left:3px solid #56c7b2;border-radius:8px;padding:0.85rem 1rem;">
+                        <code style="color:#56c7b2;font-size:0.8rem;font-weight:700;">LOGICAL_READS_PER_CALL</code>
+                        <div style="color:#d9b4c2;font-size:0.78rem;margin-top:0.3rem;line-height:1.4;">Número de blocos lidos por <strong style="color:#ffe8f2;">instrução SQL</strong>.</div>
+                    </div>
+                    <div style="background:rgba(255,120,159,0.07);border:1px solid rgba(255,120,159,0.13);border-radius:8px;padding:0.8rem 1rem;margin-top:0.2rem;">
+                        <div style="color:#ff789f;font-size:0.75rem;font-weight:700;margin-bottom:0.3rem;">⚠️ Ao exceder o limite por chamada:</div>
+                        <ul style="color:#d9b4c2;font-size:0.76rem;line-height:1.5;margin:0;padding-left:1.1rem;">
+                            <li>A instrução é <strong style="color:#ffe8f2;">interrompida e revertida</strong> (ROLLBACK automático)</li>
+                            <li>Instruções anteriores <strong style="color:#ffe8f2;">permanecem intactas</strong></li>
+                            <li>O usuário <strong style="color:#ffe8f2;">continua conectado</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <p class="reveal" style="color:#d6a84f;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">🔋 Ativando limites de recursos</p>
+                <div class="reveal">
+                    <div style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.13);border-radius:8px;padding:0.85rem 1rem;margin-bottom:0.7rem;">
+                        <div style="color:#d6a84f;font-size:0.8rem;font-weight:700;margin-bottom:0.3rem;">Parâmetro RESOURCE_LIMIT</div>
+                        <div style="color:#d9b4c2;font-size:0.78rem;line-height:1.4;">Os limites de recursos do PROFILE só são <strong style="color:#ffe8f2;">efetivos</strong> se o parâmetro estiver <code style="color:#56c7b2;">TRUE</code>.</div>
+                    </div>
+                    <div class="code-block">
+<span class="cmt">-- Ativar limites de recursos</span><br>
+<span class="kw">ALTER SYSTEM SET</span> RESOURCE_LIMIT = <span class="val">TRUE</span>;<br>
+<br>
+<span class="cmt">-- Desativar limites de recursos</span><br>
+<span class="kw">ALTER SYSTEM SET</span> RESOURCE_LIMIT = <span class="val">FALSE</span>;<br>
+<br>
+<span class="cmt">-- Válido até o banco ser desligado</span>
+                    </div>
+                    <div style="background:rgba(255,92,154,0.07);border:1px solid rgba(255,92,154,0.12);border-radius:8px;padding:0.7rem 1rem;margin-top:0.6rem;font-size:0.78rem;">
+                        <strong style="color:#ff5c9a;">Nota:</strong> <span style="color:#d9b4c2;">Os limites de <strong style="color:#ffe8f2;">senha</strong> estão sempre ativos, independente do RESOURCE_LIMIT.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: CREATE / ALTER / DROP PROFILE -->
+<div class="slide slide-8" data-slide="8">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:400px;height:400px;top:-90px;right:-70px;background:#e08ab6;opacity:0.09;"></div>
+        <div class="blob" style="width:220px;height:220px;bottom:-50px;left:-30px;background:#f472b6;opacity:0.07;"></div>
+    </div>
+    <div class="content">
+        <p class="reveal" style="color:#e08ab6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">04 — Comandos</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;margin-bottom:1rem;">CREATE, ALTER e DROP PROFILE</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#e08ab6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;font-family:'JetBrains Mono',monospace;">CREATE PROFILE — Exemplo completo</p>
+                <div class="code-block reveal">
+<span class="kw">CREATE PROFILE</span> pro_gerente <span class="kw">LIMIT</span><br>
+&nbsp;&nbsp;<span class="cmt">-- Senha</span><br>
+&nbsp;&nbsp;FAILED_LOGIN_ATTEMPTS  <span class="num">3</span><br>
+&nbsp;&nbsp;PASSWORD_LOCK_TIME     <span class="val">UNLIMITED</span><br>
+&nbsp;&nbsp;PASSWORD_LIFE_TIME     <span class="num">30</span>  <span class="cmt">-- dias</span><br>
+&nbsp;&nbsp;PASSWORD_GRACE_TIME    <span class="num">5</span>   <span class="cmt">-- dias</span><br>
+&nbsp;&nbsp;PASSWORD_REUSE_TIME    <span class="num">30</span>  <span class="cmt">-- dias</span><br>
+&nbsp;&nbsp;PASSWORD_VERIFY_FUNCTION <span class="val">DEFAULT</span><br>
+&nbsp;&nbsp;<span class="cmt">-- Recursos</span><br>
+&nbsp;&nbsp;SESSIONS_PER_USER      <span class="val">UNLIMITED</span><br>
+&nbsp;&nbsp;CONNECT_TIME           <span class="num">45</span><br>
+&nbsp;&nbsp;CPU_PER_CALL           <span class="num">3000</span><br>
+&nbsp;&nbsp;LOGICAL_READS_PER_CALL <span class="num">1000</span><br>
+&nbsp;&nbsp;PRIVATE_SGA            <span class="val">15K</span><br>
+&nbsp;&nbsp;COMPOSITE_LIMIT        <span class="num">5000000</span>;
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.7rem;">
+                <div>
+                    <p class="reveal" style="color:#f472b6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;font-family:'JetBrains Mono',monospace;">ALTER PROFILE — Modificar</p>
+                    <div class="code-block reveal">
+<span class="cmt">-- Alterar parâmetros do DEFAULT</span><br>
+<span class="kw">ALTER PROFILE</span> <span class="val">DEFAULT</span> <span class="kw">LIMIT</span><br>
+&nbsp;&nbsp;PASSWORD_LIFE_TIME     <span class="num">60</span><br>
+&nbsp;&nbsp;PASSWORD_GRACE_TIME    <span class="num">10</span><br>
+&nbsp;&nbsp;FAILED_LOGIN_ATTEMPTS  <span class="num">3</span><br>
+&nbsp;&nbsp;PASSWORD_LOCK_TIME     <span class="val">1/1440</span>; <span class="cmt">-- 1 min</span>
+                    </div>
+                </div>
+                <div>
+                    <p class="reveal" style="color:#ff789f;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;font-family:'JetBrains Mono',monospace;">DROP PROFILE — Excluir</p>
+                    <div class="code-block reveal">
+<span class="cmt">-- Remover perfil (sem usuários)</span><br>
+<span class="kw">DROP PROFILE</span> pro_gerente;<br>
+<br>
+<span class="cmt">-- Remove e re-atribui DEFAULT</span><br>
+<span class="cmt">-- aos usuários do perfil</span><br>
+<span class="kw">DROP PROFILE</span> pro_gerente <span class="kw">CASCADE</span>;<br>
+<br>
+<span class="cmt">-- ⚠️  DEFAULT não pode ser removido!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: ASSIGN + VIEWS -->
+<div class="slide slide-9" data-slide="9">
+    <div class="gradient-mesh">
+        <div class="blob" style="width:450px;height:450px;top:-110px;right:-90px;background:#e08ab6;opacity:0.1;"></div>
+        <div class="blob" style="width:280px;height:280px;bottom:-60px;left:-50px;background:#f472b6;opacity:0.08;"></div>
+        <div class="blob" style="width:180px;height:180px;top:40%;left:15%;background:#ff5c9a;opacity:0.06;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+    <div class="content">
+        <p class="reveal" style="color:#e08ab6;text-transform:uppercase;letter-spacing:0.2em;font-size:0.75rem;font-family:'JetBrains Mono',monospace;margin-bottom:0.4rem;">04 — Referência</p>
+        <h2 class="reveal" style="font-family:'JetBrains Mono',monospace;font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;margin-bottom:1rem;">Atribuir Profile &amp; Consultar Informações</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;align-items:start;">
+            <div>
+                <p class="reveal" style="color:#f472b6;font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;font-family:'JetBrains Mono',monospace;">Atribuir profile ao usuário</p>
+                <div class="code-block reveal">
+<span class="cmt">-- Na criação do usuário</span><br>
+<span class="kw">CREATE USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">IDENTIFIED BY</span> <span class="val">senha123</span><br>
+&nbsp;&nbsp;<span class="kw">PROFILE</span> pro_gerente;<br>
+<br>
+<span class="cmt">-- Alterando perfil existente</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">PROFILE</span> pro_gerente;<br>
+<br>
+<span class="cmt">-- Voltar ao perfil padrão</span><br>
+<span class="kw">ALTER USER</span> joao<br>
+&nbsp;&nbsp;<span class="kw">PROFILE</span> <span class="val">DEFAULT</span>;
+                </div>
+            </div>
+            <div class="reveal" style="display:flex;flex-direction:column;gap:0.7rem;">
+                <div style="background:rgba(224,138,182,0.07);border:1px solid rgba(224,138,182,0.13);border-radius:10px;padding:0.9rem 1.1rem;">
+                    <div style="color:#e08ab6;font-weight:700;font-size:0.85rem;margin-bottom:0.5rem;font-family:'JetBrains Mono',monospace;">📊 Views de Consulta</div>
+                    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;"><code style="background:rgba(224,138,182,0.1);color:#f0b6cf;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.75rem;">DBA_PROFILES</code><span style="color:#d9b4c2;font-size:0.77rem;">— todos os parâmetros dos perfis</span></div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;"><code style="background:rgba(224,138,182,0.1);color:#f0b6cf;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.75rem;">DBA_USERS</code><span style="color:#d9b4c2;font-size:0.77rem;">— profile atribuído a cada usuário</span></div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,92,154,0.07);border:1px solid rgba(255,92,154,0.12);border-left:3px solid #ff5c9a;border-radius:8px;padding:0.8rem 1rem;font-size:0.78rem;">
+                    <strong style="color:#ff5c9a;">Limites de senha</strong> <span style="color:#d9b4c2;">são sempre verificados pelo Oracle, independente do <code style="color:#ff5c9a;">RESOURCE_LIMIT</code>.</span>
+                </div>
+                <div style="background:rgba(214,168,79,0.07);border:1px solid rgba(214,168,79,0.12);border-left:3px solid #d6a84f;border-radius:8px;padding:0.8rem 1rem;font-size:0.78rem;">
+                    <strong style="color:#d6a84f;">Recurso avançado:</strong> <span style="color:#d9b4c2;">Para controle mais sofisticado de recursos, use o <em>Database Resource Manager</em> (DBMS_RESOURCE_MANAGER).</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div class="nav-controls">
+    <button class="nav-btn" onclick="changeSlide(-1)">&#8249;</button>
+    <div class="slide-dots" id="dots"></div>
+    <button class="nav-btn" onclick="changeSlide(1)">&#8250;</button>
+    <span class="slide-counter" id="counter">1 / 9</span>
+</div>
+
+<script>
+    let current = 1;
+    const total = document.querySelectorAll('.slide').length;
+    const dotsContainer = document.getElementById('dots');
+    const counter = document.getElementById('counter');
+    for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+    function goToSlide(n) {
+        const prev = document.querySelector('.slide.active');
+        const next = document.querySelector(`.slide[data-slide="${n}"]`);
+        if (prev) prev.classList.remove('active');
+        if (next) { next.classList.add('active'); animateSlide(next); }
+        current = n; updateNav();
+    }
+    function changeSlide(dir) { let next = current + dir; if (next < 1) next = total; if (next > total) next = 1; goToSlide(next); }
+    function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => { d.classList.toggle('active', i + 1 === current); }); counter.textContent = current + ' / ' + total; }
+    document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1); });
+    function animateSlide(slide) {
+        slide.querySelectorAll('.reveal').forEach((el, i) => {
+            el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+            el.offsetHeight;
+            const delay = i * 0.07;
+            el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+            el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+        });
+    }
+    document.addEventListener('mousemove', (e) => {
+        const spotlight = document.querySelector('.mouse-spotlight');
+        if (spotlight) spotlight.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(224,138,182,0.05), transparent 40%)`;
+    });
+    window.initParticles = function(canvas, options) {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        const interactive = options.interactive !== false;
+        const count = options.count || (interactive ? 55 : 18);
+        let mx = -1000, my = -1000;
+        const particles = Array.from({ length: count }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, size: Math.random() * 2.5 + 0.8, alpha: Math.random() * 0.25 + 0.07 }));
+        if (interactive) { canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; }); canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; }); }
+        (function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                if (interactive) { const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx * dx + dy * dy); if (dist < 120) { const force = (120 - dist) / 120 * 2; p.vx += (dx / dist) * force * 0.1; p.vy += (dy / dist) * force * 0.1; } }
+                p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+                if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(224,138,182,${p.alpha})`; ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        })();
+    };
+    document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 55 }));
+    document.querySelectorAll('.particle-canvas-ambient').forEach(c => window.initParticles(c, { interactive: false, count: 18 }));
+    try { animateSlide(document.querySelector('.slide.active')); } catch(e) {}
+</script>
+</body>
+</html>
