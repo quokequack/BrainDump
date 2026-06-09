@@ -31,3 +31,13 @@ Pull requests should include a brief description, affected paths, validation ste
 ## Agent-Specific Instructions
 
 Do not edit generated `dist/` files unless the user explicitly asks for build artifacts. Keep documentation updates concise and repository-specific. Before broad restructuring, inspect the existing `src/views` organization and preserve its topic-based hierarchy.
+
+## Repository Commands
+
+- `$adicionar-materia <pedido>`: load `agents/adicionar-materia.md` and `skills/adicionar-materia/SKILL.md`, then create or extend a college subject end to end.
+
+Example:
+
+```text
+$adicionar-materia Redes de Computadores, 5p, com uma aula sobre modelo OSI
+```

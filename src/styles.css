@@ -265,7 +265,65 @@ a {
   font-size: clamp(2rem, 7vw, 4.6rem);
 }
 
+.slide-container {
+  position: relative;
+  padding-top: 48px;
+}
+
+.slide-container:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  background: #170b12;
+}
+
+.slide-container:fullscreen .post-frame {
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+}
+
+.fullscreen-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid rgba(90, 31, 52, 0.18);
+  border-radius: 6px;
+  padding: 7px 11px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #613247;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fullscreen-button:hover {
+  border-color: #a83a68;
+  background: #fff;
+}
+
+.slide-container:fullscreen .fullscreen-button {
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.fullscreen-icon {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  clip-path: polygon(0 0, 42% 0, 42% 15%, 15% 15%, 15% 42%, 0 42%, 0 0, 100% 0, 100% 42%, 85% 42%, 85% 15%, 58% 15%, 58% 0, 100% 0, 100% 100%, 58% 100%, 58% 85%, 85% 85%, 85% 58%, 100% 58%, 100% 100%, 0 100%, 0 58%, 15% 58%, 15% 85%, 42% 85%, 42% 100%, 0 100%);
+}
+
 .post-frame {
+  display: block;
   width: 100%;
   min-height: min(760px, 72vh);
   border: 1px solid rgba(90, 31, 52, 0.18);

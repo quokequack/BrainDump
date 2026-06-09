@@ -2,6 +2,7 @@ import backupRecoveryOracle from './views/college/4p/banco-de-dados/backup-recov
 import drpOracle from './views/college/4p/banco-de-dados/drp-oracle.html?raw'
 import segurancaBancoDados from './views/college/4p/banco-de-dados/seguranca-banco-dados.html?raw'
 import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recursos-profile.html?raw'
+import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo-ia-engenharia.html?raw'
 
 export type CategorySlug = 'trabalho' | 'estudos' | 'escola'
 
@@ -78,6 +79,29 @@ export const subjects: Subject[] = [
         html: senhasRecursosProfile,
       },
     ],
+  },
+  {
+    slug: 'gestao-de-pessoas-em-ti',
+    title: 'Gestao de Pessoas em TI',
+    category: 'escola',
+    period: '4o periodo',
+    description: 'Materiais sobre pessoas, carreiras, lideranca e transformacoes no trabalho em tecnologia.',
+    posts: [
+      {
+        slug: 'paradoxo-ia-engenharia',
+        title: 'O Paradoxo da IA na Engenharia de Software',
+        description: 'Impactos da IA na formacao, carreira e organizacao do trabalho em engenharia de software.',
+        html: paradoxoIaEngenharia,
+      },
+    ],
+  },
+  {
+    slug: 'ihc',
+    title: 'IHC',
+    category: 'escola',
+    period: '4o periodo',
+    description: 'Materiais sobre Interacao Humano-Computador.',
+    posts: [],
   },
 ]
 

@@ -20,6 +20,7 @@ const subject = computed(() => getSubject(String(route.params.subject)))
         <strong>{{ post.title }}</strong>
         <span>{{ post.description }}</span>
       </RouterLink>
+      <p v-if="subject.posts.length === 0" class="empty-state">Nenhum conteudo adicionado ainda.</p>
     </div>
   </section>
 

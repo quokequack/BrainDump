@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adicionar matéria"
+  short_description: "Cria matérias e conteúdos no BrainDump"
+  default_prompt: "Use $adicionar-materia para criar uma matéria e registrá-la no BrainDump seguindo o padrão existente."

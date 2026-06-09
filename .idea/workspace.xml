@@ -5,17 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e87ad126-bd15-4baa-bb97-9429b989a099" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/public/img/denji.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/public/img/power.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/index.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/views/college/4p/banco-de-dados/backup-recovery-oracle.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/views/college/4p/banco-de-dados/drp-oracle.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/views/college/4p/banco-de-dados/seguranca-banco-dados.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/views/college/4p/banco-de-dados/senhas-recursos-profile.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/views/homepage.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/content.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/app/PostView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/app/PostView.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/app/SubjectView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/app/SubjectView.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,18 +29,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Hygp02"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Hygp02&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/quokequack/BrainDump.git",
-    "accountId": "13b4e21b-cd24-41b0-be6e-8bc3a307116a"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/quokequack/BrainDump.git&quot;,
+    &quot;accountId&quot;: &quot;13b4e21b-cd24-41b0-be6e-8bc3a307116a&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -51,10 +48,10 @@
   <component name="PackageJsonUpdateNotifier">
     <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7,
-  "fromUser": false
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3DgbGZOkfDNiAsfnOBc5WOXOluO" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -78,7 +75,7 @@
     "git-widget-placeholder": "main",
     "javascript.preferred.runtime.type.id": "node",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "/Users/alaquoke/WebstormProjects/BrainDump/public/img",
+    "last_opened_file_path": "//wsl.localhost/Ubuntu-22.04/home/alaquoke/projetos/pessoais/BrainDump",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -94,6 +91,8 @@
       <recent name="$PROJECT_DIR$/public/img" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\ihc" />
+      <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p" />
       <recent name="$PROJECT_DIR$/src/views/college/4p/banco-de-dados" />
     </key>
   </component>
@@ -112,6 +111,7 @@
       <option name="presentableId" value="Default" />
       <updated>1778706565362</updated>
       <workItem from="1778706566393" duration="2802000" />
+      <workItem from="1781022669533" duration="1712000" />
     </task>
     <servers />
   </component>
