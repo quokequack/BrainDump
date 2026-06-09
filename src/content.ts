@@ -2,7 +2,8 @@ import backupRecoveryOracle from './views/college/4p/banco-de-dados/backup-recov
 import drpOracle from './views/college/4p/banco-de-dados/drp-oracle.html?raw'
 import segurancaBancoDados from './views/college/4p/banco-de-dados/seguranca-banco-dados.html?raw'
 import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recursos-profile.html?raw'
-import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo-ia-engenharia.html?raw'
+import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo_ia_engenharia.html?raw'
+import apresentacaoAcessibilidade from './views/college/4p/ihc/apresentacao_acessibilidade.html?raw'
 
 export type CategorySlug = 'trabalho' | 'estudos' | 'escola'
 
@@ -101,7 +102,14 @@ export const subjects: Subject[] = [
     category: 'escola',
     period: '4o periodo',
     description: 'Materiais sobre Interacao Humano-Computador.',
-    posts: [],
+    posts: [
+      {
+        slug: 'apresentacao-acessibilidade',
+        title: 'Avaliacao de Acessibilidade Web com WCAG 2.1',
+        description: 'Avaliacao de acessibilidade da Ingresso.com com base nas diretrizes WCAG 2.1.',
+        html: apresentacaoAcessibilidade,
+      },
+    ],
   },
 ]
 
