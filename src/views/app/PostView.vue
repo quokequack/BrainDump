@@ -51,7 +51,7 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', syncFulls
         class="post-frame"
         :title="post.title"
         :srcdoc="post.html"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         allowfullscreen
       ></iframe>
     </div>
