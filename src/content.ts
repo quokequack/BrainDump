@@ -4,6 +4,18 @@ import segurancaBancoDados from './views/college/4p/banco-de-dados/seguranca-ban
 import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recursos-profile.html?raw'
 import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo_ia_engenharia.html?raw'
 import apresentacaoAcessibilidade from './views/college/4p/ihc/apresentacao_acessibilidade.html?raw'
+import ihcPrototipo from './views/college/4p/ihc/ihc-prototipo/index.html?raw'
+import knowlyAlertaTipografia from './views/college/4p/ihc/ihc-prototipo/img/alerta-tipografia.png?url'
+import knowlyAttendanceBadge from './views/college/4p/ihc/ihc-prototipo/img/attendance-badge.png?url'
+import knowlyBlurEffect from './views/college/4p/ihc/ihc-prototipo/img/blur-effect.png?url'
+import knowlyBlurrEffect from './views/college/4p/ihc/ihc-prototipo/img/blurr-effect(2).png?url'
+import knowlyCorrect from './views/college/4p/ihc/ihc-prototipo/img/correct.png?url'
+import knowlyFireBadge from './views/college/4p/ihc/ihc-prototipo/img/fire-badge.png?url'
+import knowlyMedal from './views/college/4p/ihc/ihc-prototipo/img/medal.png?url'
+import knowlyPodio from './views/college/4p/ihc/ihc-prototipo/img/podio.png?url'
+import knowlyStar from './views/college/4p/ihc/ihc-prototipo/img/star.png?url'
+import knowlyStreak from './views/college/4p/ihc/ihc-prototipo/img/streak.png?url'
+import knowlyTrophy from './views/college/4p/ihc/ihc-prototipo/img/trophy 1.png?url'
 
 export type CategorySlug = 'trabalho' | 'estudos' | 'escola'
 
@@ -28,6 +40,24 @@ export interface Subject {
   description: string
   posts: Post[]
 }
+
+function resolveAssetUrls(html: string, assets: Array<[string, string]>) {
+  return assets.reduce((currentHtml, asset) => currentHtml.split(asset[0]).join(asset[1]), html)
+}
+
+const ihcPrototipoHtml = resolveAssetUrls(ihcPrototipo, [
+  ['img/alerta-tipografia.png', knowlyAlertaTipografia],
+  ['img/attendance-badge.png', knowlyAttendanceBadge],
+  ['img/blur-effect.png', knowlyBlurEffect],
+  ['img/blurr-effect(2).png', knowlyBlurrEffect],
+  ['img/correct.png', knowlyCorrect],
+  ['img/fire-badge.png', knowlyFireBadge],
+  ['img/medal.png', knowlyMedal],
+  ['img/podio.png', knowlyPodio],
+  ['img/star.png', knowlyStar],
+  ['img/streak.png', knowlyStreak],
+  ['img/trophy%201.png', knowlyTrophy],
+])
 
 export const categories: Category[] = [
   {
@@ -108,6 +138,12 @@ export const subjects: Subject[] = [
         title: 'Avaliacao de Acessibilidade Web com WCAG 2.1',
         description: 'Avaliacao de acessibilidade da Ingresso.com com base nas diretrizes WCAG 2.1.',
         html: apresentacaoAcessibilidade,
+      },
+      {
+        slug: 'ihc-prototipo',
+        title: 'Knowly - Apresentacao IHC',
+        description: 'Apresentacao do prototipo Knowly, com personas, cenarios, decisoes de design e avaliacao.',
+        html: ihcPrototipoHtml,
       },
     ],
   },
