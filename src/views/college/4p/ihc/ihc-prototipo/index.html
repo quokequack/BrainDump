@@ -1,0 +1,1616 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Knowly - Apresentação IHC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-900: #1A1340;
+      --purple-700: #3B30C4;
+      --purple-500: #5B4BF5;
+      --yellow: #F5A623;
+      --lavender: #EDE9FE;
+      --bg: #F4F3FF;
+      --line: #E5E3FF;
+      --muted: #9CA3AF;
+      --text: #4B5563;
+      --white: #FFFFFF;
+      --green: #16A34A;
+      --orange: #EA580C;
+      --red: #DC2626;
+      --blue: #0284C7;
+      --shadow: 0 22px 70px rgba(26, 19, 64, .18);
+      --soft-shadow: 0 12px 34px rgba(26, 19, 64, .10);
+      --radius: 8px;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(91, 75, 245, .12), rgba(245, 166, 35, .07)),
+        var(--bg);
+      color: var(--purple-900);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .deck {
+      width: min(1280px, calc(100vw - 48px));
+      aspect-ratio: 16 / 9;
+      max-height: calc(100vh - 48px);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(229, 227, 255, .95);
+      border-radius: 14px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .deck::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(59, 48, 196, .06), transparent 26%),
+        radial-gradient(circle at 95% 12%, rgba(245, 166, 35, .12), transparent 24%),
+        radial-gradient(circle at 2% 92%, rgba(91, 75, 245, .12), transparent 22%);
+      opacity: .9;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 22px;
+      padding: 54px 72px 118px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(22px) scale(.992);
+      transition: opacity .42s var(--ease), transform .42s var(--ease), visibility .42s;
+      z-index: 1;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0) scale(1);
+      z-index: 2;
+    }
+
+    .slide.exit-left {
+      transform: translateX(-22px) scale(.992);
+    }
+
+    .slide-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      min-height: 96px;
+    }
+
+    .slide-number {
+      min-width: 64px;
+      height: 36px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid rgba(91, 75, 245, .2);
+      border-radius: 999px;
+      color: var(--purple-700);
+      background: rgba(237, 233, 254, .72);
+      font: 800 13px/1 Inter, sans-serif;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      letter-spacing: 0;
+      color: var(--purple-900);
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: clamp(36px, 5.2vw, 70px);
+      line-height: .98;
+      font-weight: 800;
+    }
+
+    h2 {
+      max-width: 900px;
+      font-size: clamp(28px, 3.8vw, 50px);
+      line-height: 1.04;
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 800;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.52;
+      font-weight: 500;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin-top: 14px;
+      font-size: 22px;
+      line-height: 1.42;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .content {
+      min-height: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .brand-line {
+      width: 84px;
+      height: 6px;
+      margin-bottom: 20px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple-700), var(--yellow));
+    }
+
+    .cover-layout {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .cover-panel {
+      align-self: stretch;
+      display: grid;
+      align-content: center;
+      gap: 18px;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .72);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .mark-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .mark-card {
+      min-height: 124px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .mark-card img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .mark-card span {
+      color: var(--purple-900);
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .flow-step,
+    .card,
+    .persona,
+    .scenario,
+    .finding,
+    .evidence-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .84);
+      box-shadow: 0 10px 28px rgba(26, 19, 64, .08);
+    }
+
+    .flow-step {
+      position: relative;
+      padding: 24px;
+      overflow: hidden;
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
+    }
+
+    .flow-step::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 5px;
+      background: var(--purple-500);
+    }
+
+    .flow-step:nth-child(2)::after { background: var(--blue); }
+    .flow-step:nth-child(3)::after { background: var(--yellow); }
+    .flow-step:nth-child(4)::after { background: var(--green); }
+
+    .step-index {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--purple-900);
+      color: var(--white);
+      font-weight: 800;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      height: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .persona {
+      min-height: 0;
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .persona-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      font-weight: 800;
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,.26);
+    }
+
+    .avatar.red { background: #B91C4F; }
+    .avatar.orange { background: var(--orange); }
+    .avatar.teal { background: #0F766E; }
+    .avatar.purple { background: #59306F; }
+
+    .role {
+      color: var(--purple-700);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .trait {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .split-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .mini-title {
+      color: var(--purple-700);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 7px;
+    }
+
+    li {
+      position: relative;
+      padding-left: 16px;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.32;
+      font-weight: 600;
+    }
+
+    li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .55em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .scenario {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .scenarios-content {
+      overflow-y: auto;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(91, 75, 245, .45) transparent;
+    }
+
+    .scenarios-content .scenario {
+      padding: 14px 16px;
+      gap: 8px;
+    }
+
+    .scenarios-content .quote {
+      padding: 10px 12px;
+      font-size: 14px;
+      line-height: 1.28;
+    }
+
+    .scenario-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      overflow: visible;
+      padding-right: 0;
+    }
+
+    .scenario-grid .scenario {
+      padding: 22px;
+      gap: 14px;
+    }
+
+    .scenario-grid h3 {
+      font-size: 24px;
+    }
+
+    .scenario-grid .quote {
+      font-size: 14px;
+      line-height: 1.28;
+    }
+
+    .scenario-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .quote {
+      padding: 16px 18px;
+      border-left: 4px solid var(--purple-500);
+      border-radius: var(--radius);
+      background: rgba(237, 233, 254, .62);
+      color: var(--purple-900);
+      font-size: 17px;
+      line-height: 1.38;
+      font-weight: 700;
+    }
+
+    .bridge {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.25fr 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .bridge-col {
+      display: grid;
+      gap: 16px;
+    }
+
+    .bridge-center {
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(237, 233, 254, .95), rgba(255, 255, 255, .86));
+      box-shadow: var(--soft-shadow);
+    }
+
+    .bridge-center img {
+      width: 104px;
+      height: 104px;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 20px rgba(26, 19, 64, .16));
+    }
+
+    .card {
+      padding: 22px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .card.compact {
+      padding: 18px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: max-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .status.ok { color: #0F7A34; background: rgba(22, 163, 74, .12); }
+    .status.warn { color: #B45607; background: rgba(245, 166, 35, .18); }
+    .status.info { color: #0369A1; background: rgba(2, 132, 199, .12); }
+    .status.risk { color: #B91C1C; background: rgba(220, 38, 38, .12); }
+
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .finding {
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .severity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .severity-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: var(--purple-700);
+      font-weight: 800;
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+    }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .metric {
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--purple-900);
+      font: 800 34px/1 "Plus Jakarta Sans", Inter, sans-serif;
+    }
+
+    .metric span {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      height: 100%;
+    }
+
+    .evidence-card {
+      min-width: 0;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+    }
+
+    .evidence-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .evidence-title h3 {
+      font-size: 17px;
+    }
+
+    .zoom-btn {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: var(--purple-700);
+      background: rgba(237, 233, 254, .86);
+      cursor: pointer;
+      transition: transform .18s var(--ease), background .18s var(--ease);
+    }
+
+    .zoom-btn:hover,
+    .zoom-btn:focus-visible {
+      background: var(--lavender);
+      transform: translateY(-1px);
+      outline: 2px solid rgba(91, 75, 245, .25);
+      outline-offset: 2px;
+    }
+
+    .media-frame {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #FAFAFF;
+    }
+
+    .media-frame img {
+      width: 100%;
+      height: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .caption {
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.38;
+      font-weight: 600;
+    }
+
+    .asset-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .asset-card {
+      min-height: 172px;
+      padding: 18px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      text-align: center;
+      box-shadow: 0 8px 22px rgba(26, 19, 64, .07);
+    }
+
+    .asset-card img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+    }
+
+    .asset-card span {
+      color: var(--purple-900);
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .mini-assets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .mini-assets img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #FAFAFF;
+    }
+
+    .type-demo {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .type-sample {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+      display: grid;
+      align-content: center;
+      gap: 18px;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .sample-title {
+      color: var(--purple-900);
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .sample-body {
+      color: var(--text);
+      font-size: 19px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      height: 100%;
+      align-content: center;
+    }
+
+    .swatch {
+      min-height: 142px;
+      padding: 16px;
+      display: grid;
+      align-content: end;
+      border-radius: var(--radius);
+      border: 1px solid rgba(26, 19, 64, .1);
+      color: var(--white);
+      box-shadow: 0 10px 24px rgba(26, 19, 64, .09);
+    }
+
+    .swatch.light {
+      color: var(--purple-900);
+      border-color: var(--line);
+    }
+
+    .swatch b {
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .swatch span {
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.24;
+      opacity: .82;
+    }
+
+    .system-grid {
+      height: 100%;
+      display: grid;
+      grid-template-columns: .95fr 1.05fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .mock-screen {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #FAFAFF;
+      box-shadow: var(--soft-shadow);
+      display: grid;
+      gap: 14px;
+    }
+
+    .mock-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mock-menu {
+      width: 32px;
+      height: 24px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .mock-menu i {
+      display: block;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--purple-500);
+    }
+
+    .mock-avatar {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--lavender);
+      color: var(--purple-700);
+      font-weight: 800;
+    }
+
+    .mock-panel {
+      padding: 18px;
+      border-radius: var(--radius);
+      background: var(--purple-900);
+      color: var(--white);
+    }
+
+    .mock-panel strong {
+      display: block;
+      margin-top: 10px;
+      font: 800 46px/1 "Plus Jakarta Sans", Inter, sans-serif;
+    }
+
+    .mock-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mock-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius);
+      background: var(--white);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .cta-layout {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr .8fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: max-content;
+      min-width: 230px;
+      min-height: 54px;
+      padding: 0 22px;
+      border-radius: var(--radius);
+      background: var(--purple-700);
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(59, 48, 196, .26);
+    }
+
+    .nav {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      bottom: 26px;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .nav-button {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--purple-700);
+      border: 1px solid var(--line);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 20px rgba(26, 19, 64, .08);
+      transition: transform .18s var(--ease), color .18s var(--ease), background .18s var(--ease);
+    }
+
+    .nav-button:hover,
+    .nav-button:focus-visible {
+      color: var(--white);
+      background: var(--purple-700);
+      transform: translateY(-1px);
+      outline: 2px solid rgba(91, 75, 245, .22);
+      outline-offset: 2px;
+    }
+
+    .progress-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--line);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--purple-700), var(--yellow));
+      transition: width .35s var(--ease);
+    }
+
+    .counter {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      min-width: 54px;
+      text-align: right;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 38px;
+      background: rgba(26, 19, 64, .74);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal.open {
+      display: grid;
+      animation: fadeIn .18s var(--ease) both;
+    }
+
+    .modal-panel {
+      position: relative;
+      width: min(1120px, 94vw);
+      max-height: 90vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 12px;
+      background: var(--white);
+      box-shadow: var(--shadow);
+      animation: modalIn .24s var(--ease) both;
+    }
+
+    .modal-title {
+      padding-right: 58px;
+      font: 800 18px/1.3 "Plus Jakarta Sans", Inter, sans-serif;
+      color: var(--purple-900);
+    }
+
+    .modal-image-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      border-radius: var(--radius);
+      background: #F8F7FF;
+      border: 1px solid var(--line);
+    }
+
+    .modal-image-wrap img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .modal-caption {
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      color: var(--purple-900);
+      background: var(--lavender);
+      cursor: pointer;
+    }
+
+    .modal-close:focus-visible {
+      outline: 2px solid var(--purple-500);
+      outline-offset: 2px;
+    }
+
+    .floating-hint {
+      position: absolute;
+      top: 24px;
+      right: 40px;
+      z-index: 5;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(10px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    @media (max-width: 900px) {
+      #app { padding: 0; }
+      .deck {
+        width: 100vw;
+        height: 100vh;
+        max-height: none;
+        aspect-ratio: auto;
+        border: 0;
+        border-radius: 0;
+      }
+      .slide {
+        overflow-y: auto;
+        padding: 48px 22px 86px;
+      }
+      .slide-header,
+      .cover-layout,
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .bridge,
+      .type-demo,
+      .system-grid,
+      .cta-layout,
+      .evidence-grid,
+      .flow,
+      .asset-row {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .asset-row { grid-template-columns: repeat(2, 1fr); }
+      .persona {
+        overflow: visible;
+        grid-template-rows: auto;
+      }
+      .split-list {
+        grid-template-columns: 1fr;
+      }
+      .cover-panel { padding: 22px; }
+      .mark-grid { grid-template-columns: 1fr; }
+      .slide-number { justify-self: start; }
+      .nav {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+      }
+      .floating-hint { display: none; }
+      h1 { font-size: 42px; }
+      h2 { font-size: 34px; }
+      .lead { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" aria-label="Apresentação do protótipo Knowly">
+    <section class="deck" id="deck">
+      <div class="floating-hint">Setas, espaço ou F para tela cheia</div>
+
+      <article class="slide active" data-title="Capa">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h1>Knowly</h1>
+            <p class="lead">Protótipo de apoio à permanência acadêmica, presença, ranking, atividades complementares e acompanhamento por dados.</p>
+          </div>
+          <div class="slide-number">01</div>
+        </div>
+        <div class="content cover-layout">
+          <div class="cover-panel">
+            <h3>Integrantes</h3>
+            <p>Maria Luísa, Andrezza Abreu, Isaque Braga e Renilson José.</p>
+            <div class="metric-strip">
+              <div class="metric"><strong>4</strong><span>personas</span></div>
+              <div class="metric"><strong>3</strong><span>perfis avaliados</span></div>
+              <div class="metric"><strong>1</strong><span>protótipo</span></div>
+            </div>
+          </div>
+          <div class="mark-grid">
+            <div class="mark-card"><img src="img/attendance-badge.png" alt=""><span>Personas e cenários</span></div>
+            <div class="mark-card"><img src="img/star.png" alt=""><span>Decisões de design</span></div>
+            <div class="mark-card"><img src="img/correct.png" alt=""><span>Avaliação do protótipo</span></div>
+            <div class="mark-card"><img src="img/trophy%201.png" alt=""><span>Demonstração no Figma</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Contexto">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>O que o Knowly propõe</h2>
+            <p class="lead">Um sistema que transforma dados acadêmicos em sinais de progresso, presença, risco e reconhecimento.</p>
+          </div>
+          <div class="slide-number">02</div>
+        </div>
+        <div class="content grid-3">
+          <div class="card"><span class="status info">Aluno</span><h3>Ponto de partida</h3><p>Resumo de pontos, ranking, progresso, presença, atividades e conquistas recentes.</p></div>
+          <div class="card"><span class="status ok">Professor</span><h3>Acompanhamento</h3><p>Visão de desempenho, alunos em risco e oportunidade de intervenção antes da evasão.</p></div>
+          <div class="card"><span class="status warn">Gestão</span><h3>Decisão</h3><p>Relatórios de evasão, permanência e dados consolidados para priorizar ações.</p></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Personas">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Personas que guiaram o protótipo</h2>
+          </div>
+          <div class="slide-number">03</div>
+        </div>
+        <div class="content grid-2">
+          <div class="persona">
+            <div class="persona-top"><div class="avatar red">LT</div><div><div class="role">Estudante sobrecarregada</div><h3>Larissa Tenório</h3></div></div>
+            <div class="trait">Precisa perceber progresso sem se expor quando encontra dificuldade.</div>
+          </div>
+          <div class="persona">
+            <div class="persona-top"><div class="avatar orange">MC</div><div><div class="role">Estudante multiplicador</div><h3>Mateus Cavalcante</h3></div></div>
+            <div class="trait">Valoriza ranking, reconhecimento público e competição saudável.</div>
+          </div>
+          <div class="persona">
+            <div class="persona-top"><div class="avatar teal">AV</div><div><div class="role">Docente</div><h3>Profa. Adriana Vasconcelos</h3></div></div>
+            <div class="trait">Precisa identificar alunos em risco antes que o acompanhamento fique tardio.</div>
+          </div>
+          <div class="persona">
+            <div class="persona-top"><div class="avatar purple">RM</div><div><div class="role">Gestão</div><h3>Roberto Maia</h3></div></div>
+            <div class="trait">Precisa de visão consolidada para justificar recursos e ações de permanência.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Cenários">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Cenários dos estudantes</h2>
+            <p class="lead">As situações de uso mostram necessidades de motivação, privacidade, metas e reconhecimento.</p>
+          </div>
+          <div class="slide-number">04</div>
+        </div>
+        <div class="content grid-2 scenarios-content scenario-grid">
+          <div class="scenario">
+            <h3>Larissa</h3>
+            <div class="scenario-list">
+              <div class="quote">Como estudante sobrecarregada, eu quero ver minha evolução para me motivar a continuar e sentir que estou melhorando.</div>
+              <div class="quote">Como estudante sobrecarregada, eu às vezes posso não me sair muito bem e não quero me expor aos meus colegas.</div>
+              <div class="quote">Como estudante sobrecarregada, eu quero estabelecer metas pessoais para me desafiar.</div>
+            </div>
+          </div>
+          <div class="scenario">
+            <h3>Mateus</h3>
+            <div class="scenario-list">
+              <div class="quote">Como estudante competitivo, eu quero saber de todas as formas possíveis que posso pontuar para crescer no ranking.</div>
+              <div class="quote">Como estudante competitivo, eu quero ver como meus oponentes estão se saindo.</div>
+              <div class="quote">Como estudante competitivo, eu quero ver resumos sobre minhas conquistas.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Cenários">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Cenários de professora e gestão</h2>
+            <p class="lead">Os perfis institucionais conectam acompanhamento, intervenção e relatórios de permanência.</p>
+          </div>
+          <div class="slide-number">05</div>
+        </div>
+        <div class="content grid-2 scenarios-content scenario-grid">
+          <div class="scenario">
+            <h3>Adriana</h3>
+            <div class="scenario-list">
+              <div class="quote">Como professora, eu quero, ao entrar no sistema, ver como vai o desempenho dos alunos que cursam as minhas disciplinas.</div>
+              <div class="quote">Como professora, eu quero conseguir intervir de alguma forma caso um aluno esteja em situação muito crítica.</div>
+            </div>
+          </div>
+          <div class="scenario">
+            <h3>Roberto</h3>
+            <div class="scenario-list">
+              <div class="quote">Como gestor, eu quero usar o sistema para emitir relatórios sobre evasão para comprovar aumento ou diminuição semestre a semestre.</div>
+              <div class="quote">Como gestor, eu preciso comparar a evasão entre semestres para justificar ações de permanência com dados consolidados.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Tipografia e assets">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Tipografia para hierarquia e leitura</h2>
+            <p class="lead">Plus Jakarta Sans sustenta títulos; Inter organiza instruções, listas e dados de apoio.</p>
+          </div>
+          <div class="slide-number">06</div>
+        </div>
+        <div class="content type-demo">
+          <div class="type-sample">
+            <div class="sample-title">Evolução visível, decisão clara.</div>
+            <p class="sample-body">A interface precisa ser rápida de entender: títulos fortes para orientação e texto secundário objetivo para dados acadêmicos.</p>
+          </div>
+          <div class="card">
+            <span class="status info">Assets menores</span>
+            <h3>Ícones com função</h3>
+            <p>Presença, sequência, medalhas e ranking reforçam ações esperadas sem competir com o conteúdo.</p>
+            <div class="mini-assets" aria-label="Assets do sistema">
+              <img src="img/attendance-badge.png" alt="Presença">
+              <img src="img/streak.png" alt="Sequência">
+              <img src="img/medal.png" alt="Medalha">
+              <img src="img/podio.png" alt="Pódio">
+              <img src="img/trophy%201.png" alt="Troféu">
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Cores">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Cores com função no Knowly</h2>
+            <p class="lead">A paleta usa associações emocionais da teoria das cores para orientar confiança, motivação, alerta e leitura de dados.</p>
+          </div>
+          <div class="slide-number">07</div>
+        </div>
+        <div class="content palette">
+          <div class="swatch" style="background:#3B30C4"><b>Identidade</b><span>Roxo sugere confiança, estabilidade e foco; no Knowly sustenta navegação e decisões acadêmicas.</span></div>
+          <div class="swatch" style="background:#5B4BF5"><b>Interação</b><span>Roxo vibrante comunica energia controlada; marca botões, seleção e avanço sem agressividade.</span></div>
+          <div class="swatch" style="background:#F5A623"><b>Destaque</b><span>Amarelo evoca otimismo e recompensa; reforça metas, ranking e conquistas motivadoras.</span></div>
+          <div class="swatch light" style="background:#EDE9FE"><b>Contexto</b><span>Lavanda transmite calma; separa blocos densos e reduz tensão em telas de desempenho.</span></div>
+          <div class="swatch" style="background:#16A34A"><b>Progresso</b><span>Verde sinaliza segurança e crescimento; confirma presença, evolução e resultados positivos.</span></div>
+          <div class="swatch" style="background:#EA580C"><b>Atenção</b><span>Laranja cria urgência moderada; indica pendências e melhorias sem parecer erro grave.</span></div>
+          <div class="swatch" style="background:#DC2626"><b>Risco</b><span>Vermelho comunica criticidade; destaca evasão e alunos que exigem intervenção rápida.</span></div>
+          <div class="swatch" style="background:#0284C7"><b>Informação</b><span>Azul passa clareza e racionalidade; apoia filtros, ajuda e dados explicativos.</span></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Sistema visual">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Sistema visual aplicado</h2>
+            <p class="lead">As decisões de design ajudam o Knowly a mostrar dados densos sem perder leitura.</p>
+          </div>
+          <div class="slide-number">08</div>
+        </div>
+        <div class="content system-grid">
+          <div class="mock-screen">
+            <div class="mock-top"><div class="mock-menu"><i></i><i></i><i></i></div><div class="mock-avatar">R</div></div>
+            <div class="mock-panel">Taxa de retenção do curso<strong>87%</strong></div>
+            <div class="mock-list">
+              <div class="mock-row"><span>Evasão</span><b>8,2%</b></div>
+              <div class="mock-row"><span>Retenção</span><b>87%</b></div>
+              <div class="mock-row"><span>Alunos em risco</span><b>34</b></div>
+            </div>
+          </div>
+          <div class="grid-2" style="height: auto;">
+            <div class="card"><span class="status ok">Clareza</span><h3>Dados escaneáveis</h3><p>Métricas grandes orientam a primeira leitura e reduzem esforço cognitivo.</p></div>
+            <div class="card"><span class="status warn">Atenção</span><h3>Texto mínimo</h3><p>Informações secundárias precisam respeitar 12px ou mais para manter legibilidade.</p></div>
+            <div class="card"><span class="status info">Ação</span><h3>Atalhos visíveis</h3><p>Presença, ranking, atividades e histórico devem estar acessíveis desde o dashboard.</p></div>
+            <div class="card"><span class="status ok">Feedback</span><h3>Status do SIGAA</h3><p>Sincronização e atualização dos dados reforçam confiança no sistema.</p></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Transição">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Do design para a avaliação</h2>
+            <p class="lead">Depois de definir linguagem visual, fluxos e sinais de feedback, avaliamos se o protótipo realmente sustenta as tarefas principais.</p>
+          </div>
+          <div class="slide-number">09</div>
+        </div>
+        <div class="content grid-3">
+          <div class="card"><span class="status info">Pergunta</span><h3>O usuário sabe o que fazer?</h3><p>O percurso cognitivo verifica intenção, visibilidade, associação e feedback.</p></div>
+          <div class="card"><span class="status warn">Critério</span><h3>O fluxo segue boas práticas?</h3><p>As heurísticas mostram problemas de controle, excesso de informação e ajuda.</p></div>
+          <div class="card"><span class="status ok">Evidência</span><h3>A interface permanece legível?</h3><p>O Stark testa contraste, toque, tipografia e simulação de visão.</p></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Organização">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Construção orientada por perfis</h2>
+            <p class="lead">A equipe dividiu o protótipo por perfis e cruzou a avaliação para reduzir vieses.</p>
+          </div>
+          <div class="slide-number">10</div>
+        </div>
+        <div class="content flow">
+          <div class="flow-step"><div class="step-index">1</div><h3>Perfis</h3><p>Estudante, professor e gestão orientaram as telas e tarefas.</p></div>
+          <div class="flow-step"><div class="step-index">2</div><h3>Fluxos</h3><p>Presença, ranking, atividades, alunos em risco e relatórios.</p></div>
+          <div class="flow-step"><div class="step-index">3</div><h3>Análise cruzada</h3><p>Quem não construiu o fluxo também avaliou a experiência.</p></div>
+          <div class="flow-step"><div class="step-index">4</div><h3>Ajustes</h3><p>Achados viraram melhorias de visibilidade, navegação e legibilidade.</p></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Percurso cognitivo">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Percurso cognitivo: fluxos compreensíveis</h2>
+            <p class="lead">Os usuários conseguem perceber as ações, associar com o efeito desejado e entender progresso.</p>
+          </div>
+          <div class="slide-number">11</div>
+        </div>
+        <div class="content grid-3">
+          <div class="finding"><span class="status warn">Gestor</span><h3>Relatório de evasão</h3><p>Fluxo validado em login, relatórios, filtros e exportação.</p><ul><li>Aumentar contraste dos filtros.</li><li>Adicionar botão exportar flutuante.</li></ul></div>
+          <div class="finding"><span class="status ok">Aluno</span><h3>Check-in em aula</h3><p>Fluxo validado sem problemas observados.</p><ul><li>Ícone de presença visível.</li><li>Código da turma e confirmação claros.</li></ul></div>
+          <div class="finding"><span class="status ok">Professor</span><h3>Alunos em risco</h3><p>Fluxo validado sem problemas observados.</p><ul><li>Acesso pelo menu compreensível.</li><li>Filtros associados ao objetivo.</li></ul></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Heurísticas">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Avaliação heurística: baixa severidade</h2>
+            <p class="lead">Os problemas não bloqueiam o uso, mas indicam melhorias claras para navegação e suporte.</p>
+          </div>
+          <div class="slide-number">12</div>
+        </div>
+        <div class="content grid-3">
+          <div class="finding"><div class="severity"><div class="severity-num">1</div><div><span class="status warn">Gestor</span></div></div><h3>Exportar relatório</h3><p>Feriu: reconhecimento em vez de memorização, estética e design minimalista, ajuda e documentação.</p></div>
+          <div class="finding"><div class="severity"><div class="severity-num" style="background: var(--orange);">2</div><div><span class="status warn">Aluno</span></div></div><h3>Atividade complementar</h3><p>Feriu: controle e liberdade do usuário, ajuda e documentação.</p></div>
+          <div class="finding"><div class="severity"><div class="severity-num" style="background: var(--green);">0</div><div><span class="status ok">Professor</span></div></div><h3>Intervir em aluno</h3><p>Nenhuma heurística violada. A página foi considerada adequada.</p></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Stark">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Acessibilidade no Stark</h2>
+            <p class="lead">Contraste e toque passaram; o ponto de atenção é a legibilidade de textos pequenos.</p>
+          </div>
+          <div class="slide-number">13</div>
+        </div>
+        <div class="content">
+          <div class="metric-strip">
+            <div class="metric"><strong>AA</strong><span>Contraste aprovado nas telas avaliadas</span></div>
+            <div class="metric"><strong>AAA</strong><span>Áreas de toque em conformidade</span></div>
+            <div class="metric"><strong>12px</strong><span>Tamanho mínimo recomendado pelo alerta</span></div>
+          </div>
+          <div class="grid-3" style="margin-top: 18px;">
+            <div class="card"><span class="status warn">Coordenador</span><h3>Fonte pequena</h3><p>Métricas secundárias perdem leitura no simulador blurred.</p></div>
+            <div class="card"><span class="status ok">Ranking do aluno</span><h3>Em conformidade</h3><p>Contraste, tipografia, toque e simulador sem alerta relevante.</p></div>
+            <div class="card"><span class="status warn">Professor</span><h3>Lista densa</h3><p>Badges e textos pequenos ficam menos legíveis em baixa nitidez.</p></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Evidências">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Evidências visuais da avaliação</h2>
+            <p class="lead">Clique no botão de ampliar para inspecionar cada evidência com mais detalhe.</p>
+          </div>
+          <div class="slide-number">14</div>
+        </div>
+        <div class="content evidence-grid">
+          <div class="evidence-card">
+            <div class="evidence-title"><h3>Alerta de tipografia</h3><button class="zoom-btn" data-src="img/alerta-tipografia.png" data-title="Alerta de tipografia" data-caption="Stark identificou fonte abaixo de 12px como risco de legibilidade." aria-label="Ampliar alerta de tipografia"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3H3v5"/><path d="M3 3l7 7"/><path d="M16 21h5v-5"/><path d="M21 21l-7-7"/></svg></button></div>
+            <div class="media-frame"><img src="img/alerta-tipografia.png" alt="Captura do Stark indicando fonte abaixo de 12 pixels"></div>
+            <p class="caption">Fonte abaixo de 12px gera alerta de legibilidade.</p>
+          </div>
+          <div class="evidence-card">
+            <div class="evidence-title"><h3>Coordenador blurred</h3><button class="zoom-btn" data-src="img/blur-effect.png" data-title="Tela inicial do coordenador no simulador blurred" data-caption="No simulador blurred, métricas secundárias perdem leitura." aria-label="Ampliar evidência do coordenador"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3H3v5"/><path d="M3 3l7 7"/><path d="M16 21h5v-5"/><path d="M21 21l-7-7"/></svg></button></div>
+            <div class="media-frame"><img src="img/blur-effect.png" alt="Tela inicial do coordenador no simulador de visão borrada"></div>
+            <p class="caption">Métricas do dashboard precisam de fonte e espaçamento melhores.</p>
+          </div>
+          <div class="evidence-card">
+            <div class="evidence-title"><h3>Alunos em risco</h3><button class="zoom-btn" data-src="img/blurr-effect(2).png" data-title="Tela de alunos em risco no simulador blurred" data-caption="Em listas densas, textos pequenos e badges ficam menos legíveis." aria-label="Ampliar evidência de alunos em risco"><svg class="icon" viewBox="0 0 24 24"><path d="M8 3H3v5"/><path d="M3 3l7 7"/><path d="M16 21h5v-5"/><path d="M21 21l-7-7"/></svg></button></div>
+            <div class="media-frame"><img src="img/blurr-effect(2).png" alt="Tela de alunos em risco no simulador de visão borrada"></div>
+            <p class="caption">Listas densas exigem hierarquia, peso e tamanho de texto.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Síntese">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Principais ajustes futuros</h2>
+            <p class="lead">A avaliação mostrou falhas pontuais que já foram percebidas pela equipe e serão corrigidas nas próximas iterações.</p>
+          </div>
+          <div class="slide-number">15</div>
+        </div>
+        <div class="content grid-4">
+          <div class="card"><span class="status warn">Visibilidade</span><h3>Exportar</h3><p>Adicionar botão flutuante e melhorar contraste dos filtros.</p></div>
+          <div class="card"><span class="status info">Navegação</span><h3>Voltar</h3><p>Garantir retorno claro em atividades complementares.</p></div>
+          <div class="card"><span class="status ok">Acessibilidade</span><h3>12px+</h3><p>Revisar textos pequenos em dashboards e listas densas.</p></div>
+          <div class="card"><span class="status info">Suporte</span><h3>Ajuda</h3><p>Incluir documentação ou tutorial no menu lateral.</p></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Figma">
+        <div class="slide-header">
+          <div>
+            <div class="brand-line"></div>
+            <h2>Protótipo no Figma</h2>
+            <p class="lead">A demonstração final mostra como as decisões de interação e interface foram consolidadas no Knowly.</p>
+          </div>
+          <div class="slide-number">16</div>
+        </div>
+        <div class="content cta-layout">
+          <div>
+            <h3 style="font-size: 30px; margin-bottom: 16px;">Agora, a navegação pelo protótipo.</h3>
+            <p style="max-width: 620px; margin-bottom: 28px;">Use este fechamento como transição direta para abrir o arquivo no Figma e percorrer os fluxos de aluno, professor e gestão.</p>
+            <a class="cta-button" href="https://www.figma.com/proto/iTVTIrEXzwQEPzF24rYiKo/Knowly---Duolingo--mas-de-Faculdade?node-id=166-4&amp;p=f&amp;t=HvrDtTjKRE42zmvB-0&amp;scaling=scale-down&amp;content-scaling=fixed&amp;page-id=51%3A3&amp;starting-point-node-id=166%3A4" target="_blank" rel="noopener noreferrer" aria-label="Abrir protótipo no Figma">Abrir protótipo</a>
+          </div>
+          <div class="cover-panel">
+            <div class="mark-grid">
+              <div class="mark-card"><img src="img/correct.png" alt=""><span>Fluxos validados</span></div>
+              <div class="mark-card"><img src="img/fire-badge.png" alt=""><span>Ajustes priorizados</span></div>
+              <div class="mark-card"><img src="img/podio.png" alt=""><span>Ranking claro</span></div>
+              <div class="mark-card"><img src="img/attendance-badge.png" alt=""><span>Check-in simples</span></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <nav class="nav" aria-label="Navegacao dos slides">
+        <button class="nav-button" id="prev" aria-label="Slide anterior"><svg class="icon" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="progress-wrap">
+          <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+          <div class="counter" id="counter">01/15</div>
+        </div>
+        <button class="nav-button" id="next" aria-label="Próximo slide"><svg class="icon" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+      </nav>
+    </section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-panel">
+      <button class="modal-close" id="modalClose" aria-label="Fechar ampliação"><svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg></button>
+      <div class="modal-title" id="modalTitle">Evidência</div>
+      <div class="modal-image-wrap"><img id="modalImage" src="" alt=""></div>
+      <div class="modal-caption" id="modalCaption"></div>
+    </div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+    const counter = document.getElementById("counter");
+    const progressBar = document.getElementById("progressBar");
+    const deck = document.getElementById("deck");
+    const modal = document.getElementById("modal");
+    const modalClose = document.getElementById("modalClose");
+    const modalImage = document.getElementById("modalImage");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalCaption = document.getElementById("modalCaption");
+    let index = 0;
+
+    function pad(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function showSlide(nextIndex, options = {}) {
+      if (nextIndex < 0 || nextIndex >= slides.length || nextIndex === index) return;
+      const current = slides[index];
+      const target = slides[nextIndex];
+      current.classList.toggle("exit-left", nextIndex > index);
+      current.classList.remove("active");
+      target.classList.remove("exit-left");
+      target.classList.add("active");
+      index = nextIndex;
+      updateChrome();
+      if (!options.silentHash) {
+        history.replaceState(null, "", `#${index + 1}`);
+      }
+    }
+
+    function updateChrome() {
+      counter.textContent = `${pad(index + 1)}/${pad(slides.length)}`;
+      progressBar.style.width = `${((index + 1) / slides.length) * 100}%`;
+      prev.disabled = index === 0;
+      next.disabled = index === slides.length - 1;
+      document.title = `${slides[index].dataset.title} - Knowly`;
+    }
+
+    function openModal(button) {
+      modalImage.src = button.dataset.src;
+      modalImage.alt = button.dataset.title;
+      modalTitle.textContent = button.dataset.title;
+      modalCaption.textContent = button.dataset.caption;
+      modal.classList.add("open");
+      modalClose.focus();
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+      modalImage.src = "";
+    }
+
+    prev.addEventListener("click", () => showSlide(index - 1));
+    next.addEventListener("click", () => showSlide(index + 1));
+
+    document.querySelectorAll(".zoom-btn").forEach((button) => {
+      button.addEventListener("click", () => openModal(button));
+    });
+
+    modalClose.addEventListener("click", closeModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (modal.classList.contains("open")) {
+        if (event.key === "Escape") closeModal();
+        return;
+      }
+      if (event.key === "ArrowRight" || event.key === " ") {
+        event.preventDefault();
+        showSlide(index + 1);
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        showSlide(index - 1);
+      }
+      if (event.key.toLowerCase() === "f") {
+        if (!document.fullscreenElement) deck.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      }
+      if (event.key === "Home") showSlide(0);
+      if (event.key === "End") showSlide(slides.length - 1);
+    });
+
+    const initialHash = Number.parseInt(window.location.hash.replace("#", ""), 10);
+    if (Number.isFinite(initialHash) && initialHash >= 1 && initialHash <= slides.length) {
+      slides[index].classList.remove("active");
+      index = initialHash - 1;
+      slides[index].classList.add("active");
+    }
+
+    updateChrome();
+
+    const params = new URLSearchParams(window.location.search);
+    const evidenceIndex = Number.parseInt(params.get("evidence"), 10);
+    if (Number.isFinite(evidenceIndex)) {
+      const buttons = Array.from(document.querySelectorAll(".zoom-btn"));
+      if (buttons[evidenceIndex]) openModal(buttons[evidenceIndex]);
+    }
+  </script>
+</body>
+</html>
