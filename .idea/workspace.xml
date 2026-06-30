@@ -4,15 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e87ad126-bd15-4baa-bb97-9429b989a099" name="Changes" comment="">
+    <list default="true" id="e87ad126-bd15-4baa-bb97-9429b989a099" name="Changes" comment="feat: skills e slide de gestao">
+      <change afterPath="$PROJECT_DIR$/src/views/college/4p/direito-digital/LGPDoc_apresentacao.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/content.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/router.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/router.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/app/CategoryView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/app/CategoryView.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/views/app/PostView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/app/PostView.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/views/app/SubjectView.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/app/SubjectView.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +74,7 @@
     "git-widget-placeholder": "main",
     "javascript.preferred.runtime.type.id": "node",
     "junie.onboarding.icon.badge.shown": "true",
-    "last_opened_file_path": "//wsl.localhost/Ubuntu-22.04/home/alaquoke/projetos/pessoais/BrainDump",
+    "last_opened_file_path": "//wsl.localhost/Ubuntu-22.04/home/alaquoke/projetos/pessoais/BrainDump/src/views/college/4p/direito-digital",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -88,9 +87,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\direito-digital" />
       <recent name="$PROJECT_DIR$/public/img" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\gestao-de-pessoas-em-ti" />
       <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\ihc" />
       <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p" />
       <recent name="$PROJECT_DIR$/src/views/college/4p/banco-de-dados" />
@@ -111,11 +112,34 @@
       <option name="presentableId" value="Default" />
       <updated>1778706565362</updated>
       <workItem from="1778706566393" duration="2802000" />
-      <workItem from="1781022669533" duration="1712000" />
+      <workItem from="1781022669533" duration="4163000" />
+      <workItem from="1781194068947" duration="639000" />
+      <workItem from="1782844569697" duration="894000" />
     </task>
+    <task id="LOCAL-00001" summary="feat: skills e slide de gestao">
+      <option name="closed" value="true" />
+      <created>1781030110353</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1781030110353</updated>
+    </task>
+    <task id="LOCAL-00002" summary="feat: skills e slide de gestao">
+      <option name="closed" value="true" />
+      <created>1781030841903</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1781030841903</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat: skills e slide de gestao" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: skills e slide de gestao" />
   </component>
 </project>

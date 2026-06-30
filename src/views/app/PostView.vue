@@ -32,7 +32,7 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', syncFulls
 <template>
   <article v-if="subject && post" class="reader">
     <div class="reader-header">
-      <RouterLink class="text-link" :to="`/escola/${subject.slug}`">Voltar para {{ subject.title }}</RouterLink>
+      <RouterLink class="text-link" :to="`/${subject.category}/${subject.slug}`">Voltar para {{ subject.title }}</RouterLink>
       <h1>{{ post.title }}</h1>
       <p>{{ post.description }}</p>
     </div>
@@ -59,6 +59,6 @@ onBeforeUnmount(() => document.removeEventListener('fullscreenchange', syncFulls
 
   <section v-else class="content-section">
     <h1>Post nao encontrado</h1>
-    <RouterLink class="text-link" to="/escola">Voltar para escola</RouterLink>
+    <RouterLink class="text-link" :to="`/${String(route.params.category)}`">Voltar para a categoria</RouterLink>
   </section>
 </template>

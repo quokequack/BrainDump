@@ -16,7 +16,7 @@ const subject = computed(() => getSubject(String(route.params.subject)))
     </div>
 
     <div class="list">
-      <RouterLink v-for="post in subject.posts" :key="post.slug" class="list-item" :to="`/escola/${subject.slug}/${post.slug}`">
+      <RouterLink v-for="post in subject.posts" :key="post.slug" class="list-item" :to="`/${subject.category}/${subject.slug}/${post.slug}`">
         <strong>{{ post.title }}</strong>
         <span>{{ post.description }}</span>
       </RouterLink>
@@ -26,6 +26,6 @@ const subject = computed(() => getSubject(String(route.params.subject)))
 
   <section v-else class="content-section">
     <h1>Disciplina nao encontrada</h1>
-    <RouterLink class="text-link" to="/escola">Voltar para escola</RouterLink>
+    <RouterLink class="text-link" :to="`/${String(route.params.category)}`">Voltar para a categoria</RouterLink>
   </section>
 </template>

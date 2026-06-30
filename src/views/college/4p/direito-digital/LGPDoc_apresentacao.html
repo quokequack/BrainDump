@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>LGPDoc — Apresentação</title>
+<style>
+  :root{
+    --navy:#16323A;
+    --navy-soft:#3E5C63;
+    --teal:#0E7C7B;
+    --teal-dark:#0B5563;
+    --amber:#B8762F;
+    --red:#A8453D;
+    --sage:#3F8E80;
+    --bg:#FFFFFF;
+    --tint:#EEF6F6;
+    --tint2:#FBF1E6;
+    --line:#DCE7E7;
+    --shadow: 0 2px 14px rgba(16,50,58,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#E7EEEE;font-family:"Calibri","Segoe UI",Arial,sans-serif;color:var(--navy);}
+  .stage{
+    width:100%;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .frame{
+    position:relative;
+    width:1280px;
+    max-width:96vw;
+    aspect-ratio:16/9;
+    background:var(--bg);
+    border-radius:6px;
+    box-shadow:0 12px 40px rgba(16,50,58,0.22);
+    overflow:hidden;
+  }
+  .slide{
+    position:absolute;
+    inset:0;
+    padding:46px 56px 58px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .35s ease;
+    display:flex;
+    flex-direction:column;
+  }
+  .slide.active{opacity:1;pointer-events:auto;}
+
+  .kicker{
+    color:var(--teal);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin:0 0 4px 0;
+  }
+  .titlebar{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;}
+  .titlebar .icon{flex:0 0 auto;width:42px;height:42px;color:var(--teal-dark);margin-top:2px;}
+  .titlebar h1{
+    font-family:Georgia,"Cambria",serif;
+    font-size:30px;
+    line-height:1.15;
+    margin:0;
+    color:var(--navy);
+    font-weight:700;
+  }
+  .lede{font-size:14.5px;color:var(--navy-soft);margin:0 0 18px 0;max-width:980px;line-height:1.5;}
+
+  .footer{
+    position:absolute;
+    left:56px;right:56px;bottom:20px;
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--navy-soft);font-style:italic;
+  }
+
+  .row{display:flex;gap:22px;flex:1;min-height:0;}
+  .col{flex:1;min-height:0;}
+
+  .card{
+    background:var(--tint);
+    border-radius:10px;
+    padding:18px 22px;
+    box-shadow:var(--shadow);
+  }
+  .card.amber{background:var(--tint2);}
+  .card.dark{background:var(--navy);color:#fff;}
+  .card h3{
+    font-family:Georgia,"Cambria",serif;
+    font-size:16px;margin:0 0 10px 0;color:var(--teal-dark);
+  }
+  .card.amber h3{color:var(--amber);}
+  .card.dark h3{color:#fff;}
+
+  .ctx{
+    border-radius:10px;
+    padding:16px 20px;
+    background:var(--tint2);
+    box-shadow:var(--shadow);
+  }
+  .ctx .lbl{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+  .ctx .lbl svg{width:18px;height:18px;flex:0 0 auto;}
+  .ctx p{font-size:13px;color:var(--navy);margin:0 0 6px 0;line-height:1.5;}
+  .ctx .src{font-size:10.5px;color:var(--navy-soft);font-style:italic;margin-top:6px;}
+
+  ul.bullets{list-style:none;margin:0;padding:0;}
+  ul.bullets li{
+    position:relative;padding-left:16px;margin-bottom:8px;
+    font-size:13.5px;line-height:1.4;color:var(--navy);
+  }
+  ul.bullets li::before{
+    content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--teal);
+  }
+
+  .icon-row{display:flex;gap:12px;margin-bottom:18px;}
+  .icon-row .item{flex:1;display:flex;gap:10px;align-items:flex-start;}
+  .icon-row .item svg{width:26px;height:26px;flex:0 0 auto;color:var(--teal-dark);margin-top:2px;}
+  .icon-row .item .t{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+  .icon-row .item .d{font-size:11.5px;color:var(--navy-soft);line-height:1.4;}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+  table.tbl thead th{
+    background:var(--teal-dark);color:#fff;text-align:left;
+    padding:10px 14px;font-size:13px;font-weight:700;
+  }
+  table.tbl tbody td{padding:9px 14px;border-bottom:1px solid var(--line);color:var(--navy);}
+  table.tbl tbody tr:last-child td{border-bottom:none;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .chip{
+    border:1px solid var(--teal);color:var(--teal-dark);
+    border-radius:6px;padding:7px 14px;font-size:11.5px;font-weight:700;
+    background:var(--tint);
+  }
+
+  .legend-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .dot{width:14px;height:14px;border-radius:50%;flex:0 0 auto;}
+  .legend-row .lab{font-size:12.5px;font-weight:700;color:var(--navy);width:90px;flex:0 0 auto;}
+  .legend-row .desc{font-size:11px;color:var(--navy-soft);}
+
+  .risk-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);}
+  .risk-row:last-child{border-bottom:none;}
+  .risk-bar{width:6px;height:34px;border-radius:3px;flex:0 0 auto;}
+  .risk-range{font-size:13px;font-weight:700;color:var(--navy);width:78px;flex:0 0 auto;}
+  .risk-label{font-size:13px;font-weight:700;width:100px;flex:0 0 auto;}
+  .risk-desc{font-size:10.5px;color:var(--navy-soft);}
+
+  .quote-card{display:flex;gap:16px;align-items:center;background:var(--navy);color:#fff;border-radius:10px;padding:22px 28px;}
+  .quote-card svg{width:30px;height:30px;flex:0 0 auto;color:#fff;opacity:.8;}
+  .quote-card p{font-size:14.5px;font-style:italic;line-height:1.5;margin:0;}
+
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+
+  .stat-box{background:var(--tint);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow);}
+  .stat-box .num{font-family:Georgia,"Cambria",serif;font-size:26px;font-weight:700;color:var(--teal-dark);}
+  .stat-box .lab{font-size:11px;color:var(--navy-soft);line-height:1.3;margin-top:2px;}
+
+  /* nav */
+  .nav-controls{
+    position:fixed;left:0;right:0;bottom:14px;
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    z-index:10;
+  }
+  .nav-btn{
+    width:38px;height:38px;border-radius:50%;border:none;
+    background:#fff;color:var(--teal-dark);box-shadow:0 2px 10px rgba(0,0,0,0.18);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .nav-btn:hover{background:var(--tint);}
+  .nav-btn svg{width:18px;height:18px;}
+  .dots{display:flex;gap:6px;}
+  .dots button{
+    width:8px;height:8px;border-radius:50%;border:none;background:#B9CACA;cursor:pointer;padding:0;
+  }
+  .dots button.on{background:var(--teal-dark);width:20px;border-radius:5px;}
+  .counter{
+    font-size:12px;color:var(--navy-soft);background:#fff;border-radius:20px;padding:6px 12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.12);
+  }
+
+  @media (max-width:880px){
+    .row{flex-direction:column;}
+    .grid4{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="frame" id="frame">
+
+    <!-- SLIDE 1 — TITLE -->
+    <section class="slide active">
+      <div style="display:flex;flex-direction:column;justify-content:center;flex:1;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:64px;height:64px;color:var(--teal-dark);margin-bottom:18px;">
+          <path d="M12 2.5l8 3v6.2c0 5-3.4 8.6-8 9.8-4.6-1.2-8-4.8-8-9.8V5.5l8-3z"/>
+          <path d="M9 12l2 2 4-4.5"/>
+        </svg>
+        <p class="kicker">PROTÓTIPO EDUCACIONAL · ANÁLISE DE SITES</p>
+        <h1 style="font-family:Georgia,'Cambria',serif;font-size:58px;color:var(--navy);margin:0 0 10px;font-weight:700;">LGPDoc</h1>
+        <p style="font-size:18px;color:var(--navy-soft);margin:0 0 22px;">Scanner educacional de sinais públicos de LGPD em sites</p>
+        <div class="card" style="max-width:880px;">
+          <p style="font-size:13.5px;color:var(--navy);margin:0;line-height:1.55;">
+            Analisa política de privacidade, cookies, formulários, direitos do titular, contato, segurança básica e linguagem —
+            e gera um relatório com pontuação, evidências e recomendações.
+            <strong style="color:var(--teal-dark);">Não certifica conformidade jurídica.</strong>
+          </p>
+        </div>
+        <div style="display:flex;gap:34px;margin-top:24px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:22px;height:22px;color:var(--teal-dark);"><path d="M3 21V9l6-4 6 4v12"/><path d="M9 21V13h6v8"/><path d="M15 9l6 4v8"/></svg>
+            <span style="font-size:13px;font-weight:700;">Pequenas empresas</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:22px;height:22px;color:var(--teal-dark);"><path d="M22 9L12 5 2 9l10 4 10-4z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg>
+            <span style="font-size:13px;font-weight:700;">Estudantes</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:22px;height:22px;color:var(--teal-dark);"><circle cx="12" cy="8" r="3.2"/><path d="M5 21c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg>
+            <span style="font-size:13px;font-weight:700;">Professores</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:22px;height:22px;color:var(--teal-dark);"><rect x="2.5" y="5" width="19" height="13" rx="1.5"/><path d="M9 10l-2 2 2 2M15 10l2 2-2 2"/></svg>
+            <span style="font-size:13px;font-weight:700;">Desenvolvedores</span>
+          </div>
+
+        </div>
+          <div style="display:flex;gap:34px;margin-top:24px;">
+              <div style="display:flex;align-items:center;gap:5px;">
+                  <span style="font-size:13px;font-weight:700;">Andrezza Abreu</span>
+                  <span style="font-size:13px;font-weight:700;"> - </span>
+                  <span style="font-size:13px;font-weight:700;">Henrique Cavalcanti</span>
+                  <span style="font-size:13px;font-weight:700;"> - </span>
+                  <span style="font-size:13px;font-weight:700;">Isaque Braga</span>
+                  <span style="font-size:13px;font-weight:700;"> - </span>
+                  <span style="font-size:13px;font-weight:700;">Maria Luísa Alaquoke</span>
+                  <span style="font-size:13px;font-weight:700;"> - </span>
+                  <span style="font-size:13px;font-weight:700;">Renilson José</span>
+
+              </div>
+          </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Apresentação do projeto</span><span>1 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 2 — PROBLEMA -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 16H3l9-16z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
+        <div><p class="kicker">CONTEXTO</p><h1>Por que esse projeto é necessário?</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="icon-row" style="flex-direction:column;gap:18px;">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <div><div class="t">Coleta cotidiana de dados</div><div class="d">Formulários, cookies, newsletters e páginas de contato coletam dados pessoais todos os dias.</div></div>
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>
+              <div><div class="t">Falta de transparência</div><div class="d">Muitas pequenas empresas não explicam claramente como os dados coletados são usados.</div></div>
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18M5 7l-3 6a3 3 0 006 0l-3-6zM19 7l-3 6a3 3 0 006 0l-3-6zM5 7h14"/></svg>
+              <div><div class="t">Exigências da LGPD</div><div class="d">Transparência, finalidade, necessidade, segurança e respeito aos direitos do titular.</div></div>
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-5"/></svg>
+              <div><div class="t">Distância da lei</div><div class="d">Para usuários leigos, a LGPD pode parecer técnica, jurídica ou distante demais.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="ctx" style="height:100%;">
+            <div class="lbl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+              Contexto: o tamanho do problema
+            </div>
+            <p>Uma pesquisa do Sebrae (2025) mostra que 80% dos pequenos empreendedores brasileiros já ouviram falar da LGPD, mas apenas 5% afirmam conhecê-la em profundidade — e 77% ainda não adotaram nenhuma medida concreta de adequação.</p>
+            <p>Um levantamento do Grupo Daryus, com 200 organizações em 16 setores, indica que 80% das empresas no Brasil ainda não estão completamente adequadas à lei.</p>
+            <p style="color:var(--teal-dark);font-weight:700;">O problema não é apenas técnico — também é educacional. É exatamente essa lacuna que o LGPDoc busca preencher.</p>
+            <div class="src">Fontes: Sebrae (2025); Grupo Daryus, pesquisa com 200 organizações (2025).</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Contexto e problema</span><span>2 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 3 — OBJETIVO E PÚBLICO -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="8" r="2.4"/><path d="M21 20c0-2.4-1.6-4.2-3.6-5"/></svg>
+        <div><p class="kicker">PROPOSTA</p><h1>Objetivo, público-alvo e proposta de valor</h1></div>
+      </div>
+      <p class="lede">Transformar critérios comuns da LGPD em uma experiência simples, visual e educativa — mostrando como problemas de privacidade aparecem em um site real ou simulado.</p>
+      <table class="tbl" style="margin-bottom:16px;">
+        <thead><tr><th style="width:28%;">Público</th><th>Necessidade atendida</th></tr></thead>
+        <tbody>
+          <tr><td>Pequenas empresas</td><td>Entender riscos aparentes em sites institucionais, formulários, políticas e cookies.</td></tr>
+          <tr><td>Desenvolvedores</td><td>Validar boas práticas de privacidade antes ou depois da publicação de sites.</td></tr>
+          <tr><td>Estudantes</td><td>Aprender LGPD aplicada a exemplos concretos.</td></tr>
+          <tr><td>Professores</td><td>Usar relatórios e critérios como material didático.</td></tr>
+        </tbody>
+      </table>
+      <div class="ctx">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+          Contexto: o peso das pequenas empresas
+        </div>
+        <p>Micro e pequenas empresas representam 99% dos negócios brasileiros (Sebrae). A LGPD se aplica integralmente a elas, ainda que a Resolução CD/ANPD nº 2/2022 ofereça prazos e procedimentos simplificados para esse porte de empresa.</p>
+        <p style="font-style:italic;color:var(--navy-soft);">O LGPDoc não substitui um parecer jurídico: é uma ferramenta de aprendizado que aponta sinais públicos, explica por que importam e indica onde buscar mais informação.</p>
+      </div>
+      <div class="footer"><span>LGPDoc — Objetivo e público-alvo</span><span>3 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 4 — POLÍTICA DE PRIVACIDADE -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/><path d="M8 12h8M8 16h5"/></svg>
+        <div><p class="kicker">POLÍTICA DE PRIVACIDADE</p><h1>Política de privacidade e linguagem clara</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card" style="height:100%;">
+            <h3>O que será analisado</h3>
+            <ul class="bullets">
+              <li>Existência de política e identificação do controlador</li>
+              <li>Dados coletados, finalidade e tempo de retenção</li>
+              <li>Compartilhamento com terceiros e bases legais</li>
+              <li>Direitos do titular e canal de contato</li>
+              <li>Clareza da linguagem e ausência de termos vagos</li>
+            </ul>
+            <p style="font-size:12px;color:var(--navy-soft);margin-top:10px;line-height:1.5;">Não basta existir uma página de privacidade: ela precisa explicar com clareza quais dados são tratados, por quê, por quanto tempo e como o titular exerce seus direitos.</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="ctx" style="height:100%;">
+            <div class="lbl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3h6l1 4H8l1-4z"/><path d="M5 7h14l-1.2 13a2 2 0 01-2 1.8H8.2A2 2 0 016.2 20L5 7z"/></svg>
+              Contexto: o que o Art. 9º da LGPD exige
+            </div>
+            <p>Antes de tratar dados, o controlador deve informar ao titular, de forma clara e de fácil acesso: a finalidade específica do tratamento, a forma e duração do tratamento, a identificação do controlador e seus dados de contato, eventual uso compartilhado de dados e suas finalidades, e as responsabilidades dos agentes envolvidos.</p>
+            <p>A clareza da linguagem é parte dessa exigência: expressões genéricas como "melhorar sua experiência" não cumprem o dever de informação se não explicam quais dados e com qual finalidade.</p>
+            <div class="src">Fonte: LGPD, Lei nº 13.709/2018, Art. 9º.</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Política de privacidade e linguagem clara</span><span>4 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 5 — COOKIES E CONSENTIMENTO -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="15" r="1" fill="currentColor" stroke="none"/></svg>
+        <div><p class="kicker">COOKIES</p><h1>Cookies e consentimento</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="icon-row" style="flex-direction:column;gap:16px;">
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 13h3"/></svg>
+              <div><div class="t">Estrutura do banner</div><div class="d">Botões de aceitar, recusar e gerenciar preferências; link para a política de cookies.</div></div>
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <div><div class="t">Análise técnica dos cookies</div><div class="d">Cookies próprios e de terceiros, e os carregados antes do consentimento.</div></div>
+            </div>
+            <div class="item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h10"/></svg>
+              <div><div class="t">Categorias</div><div class="d">Necessários, analíticos, funcionais e de publicidade; scripts de rastreamento.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="ctx" style="height:100%;">
+            <div class="lbl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+              Contexto: base legal e fiscalização
+            </div>
+            <p>No Brasil, o uso de cookies costuma se apoiar no consentimento do titular (LGPD, Art. 7º, I), combinado com o dever de transparência do Marco Civil da Internet (Lei nº 12.965/2014) sobre coleta e uso de registros de acesso.</p>
+            <p>Análises de mercado sobre fiscalização da ANPD em 2024–2026 apontam banners de cookies inválidos — como "continuar navegando" tratado como aceite — e cookies analíticos disparados antes do consentimento entre as não conformidades mais comuns encontradas em auditorias.</p>
+            <div class="src">Fontes: LGPD Art. 7º, I; Marco Civil da Internet (Lei 12.965/2014); WebLegal.ai, panorama de fiscalização ANPD (2026).</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Cookies e consentimento</span><span>5 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 6 — CLASSIFICAÇÃO DE COOKIES -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="1.6" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="1.6" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="1.6" fill="currentColor" stroke="none"/></svg>
+        <div><p class="kicker">COOKIES</p><h1>Classificação e controle de cookies</h1></div>
+      </div>
+      <p class="lede">Nem todo cookie tem o mesmo impacto sobre a privacidade: classificar ajuda o usuário a entender quais merecem mais atenção.</p>
+      <div class="grid4" style="margin-bottom:18px;">
+        <div class="stat-box"><div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--sage);"></span><span style="font-weight:700;font-size:13.5px;">Necessário</span></div><div class="lab" style="margin-top:8px;">Funcionamento básico do site</div></div>
+        <div class="stat-box"><div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--teal);"></span><span style="font-weight:700;font-size:13.5px;">Funcional</span></div><div class="lab" style="margin-top:8px;">Preferências do usuário</div></div>
+        <div class="stat-box"><div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--amber);"></span><span style="font-weight:700;font-size:13.5px;">Analítico</span></div><div class="lab" style="margin-top:8px;">Estatísticas de navegação</div></div>
+        <div class="stat-box"><div style="display:flex;align-items:center;gap:8px;"><span class="dot" style="background:var(--red);"></span><span style="font-weight:700;font-size:13.5px;">Publicidade</span></div><div class="lab" style="margin-top:8px;">Marketing e rastreamento</div></div>
+      </div>
+      <div class="ctx">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+          Contexto: necessidade como princípio legal
+        </div>
+        <p>Essa classificação segue uma taxonomia (necessários, funcionais, analíticos e de publicidade) amplamente usada em frameworks internacionais de privacidade, e se conecta diretamente ao princípio da necessidade previsto no Art. 6º, III da LGPD: o tratamento deve se limitar ao mínimo necessário para a finalidade pretendida — ou seja, cookies não essenciais exigem escolha explícita do usuário.</p>
+        <div class="src">Fonte: LGPD, Art. 6º, III (princípio da necessidade).</div>
+      </div>
+      <div class="footer"><span>LGPDoc — Classificação e controle de cookies</span><span>6 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 7 — FORMULÁRIOS -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <div><p class="kicker">FORMULÁRIOS</p><h1>Formulários e minimização de dados</h1></div>
+      </div>
+      <p class="lede">Formulários são pontos diretos de coleta de dados pessoais. A minimização significa pedir apenas o que é necessário para a finalidade declarada.</p>
+      <div class="row">
+        <div class="col">
+          <table class="tbl">
+            <thead><tr><th>Tipo de formulário</th><th>Campo a observar com atenção</th></tr></thead>
+            <tbody>
+              <tr><td>Newsletter</td><td>CPF</td></tr>
+              <tr><td>Contato simples</td><td>Data de nascimento</td></tr>
+              <tr><td>Orçamento comum</td><td>Informação de saúde</td></tr>
+              <tr><td>Cadastro básico</td><td>Upload obrigatório de documento</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col">
+          <div class="ctx" style="height:100%;">
+            <div class="lbl">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+              Contexto: o princípio da necessidade
+            </div>
+            <p>O Art. 6º da LGPD lista os princípios que orientam todo tratamento de dados — entre eles, finalidade (inciso I) e necessidade (inciso III): a coleta deve se limitar ao mínimo necessário para realizar a finalidade informada, evitando o tratamento excessivo.</p>
+            <p>Por isso, campos como CPF em uma newsletter ou upload obrigatório de documento em um cadastro simples merecem atenção: nem sempre são proporcionais à finalidade declarada.</p>
+            <div class="src">Fonte: LGPD, Art. 6º, I e III.</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Formulários e minimização de dados</span><span>7 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 8 — DADOS SENSÍVEIS E DIREITOS -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-4.4-7-10.5A4.5 4.5 0 019 6a4 4 0 013 1.5A4 4 0 0115 6a4.5 4.5 0 014 4.5C19 16.6 12 21 12 21z"/></svg>
+        <div><p class="kicker">DADOS SENSÍVEIS E DIREITOS</p><h1>Dados sensíveis e direitos do titular</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card amber" style="height:100%;">
+            <h3>Dados pessoais sensíveis (Art. 5º, II)</h3>
+            <ul class="bullets">
+              <li>Origem racial ou étnica</li>
+              <li>Convicção religiosa e opinião política</li>
+              <li>Saúde e vida sexual</li>
+              <li>Dado genético ou biométrico</li>
+            </ul>
+            <p style="font-size:11.5px;color:var(--navy-soft);margin-top:10px;line-height:1.45;">A LGPD reserva regras de proteção mais rígidas para esses dados (Art. 11), pois seu uso indevido pode gerar discriminação ou exposição indevida ao titular.</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card" style="height:100%;">
+            <h3>Direitos do titular (Art. 18)</h3>
+            <ul class="bullets">
+              <li>Confirmação da existência e acesso aos dados</li>
+              <li>Correção de dados incompletos ou desatualizados</li>
+              <li>Anonimização, bloqueio ou eliminação de dados</li>
+              <li>Portabilidade e revogação do consentimento</li>
+              <li>Informação sobre uso compartilhado de dados</li>
+            </ul>
+            <p style="font-size:11.5px;color:var(--navy-soft);margin-top:10px;line-height:1.45;">O Art. 18 lista dez direitos do titular; entre eles, todos exigem um canal prático e acessível para serem exercidos — não basta declarar que "serão respeitados".</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Dados sensíveis e direitos do titular</span><span>8 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 9 — CONTROLADOR, CONTATO E SEGURANÇA -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+        <div><p class="kicker">CONTROLADOR E SEGURANÇA</p><h1>Responsável pelos dados e segurança mínima</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="card" style="height:100%;">
+            <h3>Controlador e contato</h3>
+            <ul class="bullets">
+              <li>Nome da empresa, CNPJ e indicação do controlador</li>
+              <li>Encarregado/DPO e canal dedicado de privacidade</li>
+              <li>E-mails como privacidade@, dpo@, lgpd@</li>
+            </ul>
+            <p style="font-size:11.5px;color:var(--navy-soft);margin-top:10px;line-height:1.45;">O Art. 41 da LGPD exige a indicação de um encarregado (DPO) e a divulgação clara de seus dados de contato, para que o titular saiba com quem falar.</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card amber" style="height:100%;">
+            <h3>Segurança básica</h3>
+            <ul class="bullets">
+              <li>Uso de HTTPS e formulários em páginas seguras</li>
+              <li>Scripts externos e recursos de domínios de terceiros</li>
+              <li>Links suspeitos e exposição pública de dados sensíveis</li>
+            </ul>
+            <p style="font-size:11.5px;color:var(--navy-soft);margin-top:10px;line-height:1.45;">O Art. 46 exige medidas técnicas e administrativas de segurança. Desde a Resolução CD/ANPD nº 15/2024, incidentes relevantes devem ser comunicados à ANPD em até 3 dias úteis.</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>LGPDoc — Controlador, contato e segurança</span><span>9 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 10 — MATRIZ DE CRITÉRIOS E RISCO -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><line x1="5" y1="20" x2="5" y2="10"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="19" y1="20" x2="19" y2="13"/></svg>
+        <div><p class="kicker">AVALIAÇÃO</p><h1>Como o sistema avalia o site?</h1></div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <p style="font-size:13px;font-weight:700;color:var(--teal-dark);margin:0 0 8px;">33 critérios em 7 categorias</p>
+          <div class="chips">
+            <span class="chip">Privacidade</span><span class="chip">Cookies</span><span class="chip">Formulários</span>
+            <span class="chip">Direitos</span><span class="chip">Controlador</span><span class="chip">Segurança</span><span class="chip">Linguagem</span>
+          </div>
+          <p style="font-size:13px;font-weight:700;color:var(--teal-dark);margin:14px 0 8px;">Estados de cada critério</p>
+          <div class="legend-row"><span class="dot" style="background:var(--sage);"></span><span class="lab">Encontrado</span><span class="desc">Evidência suficiente · pontuação completa</span></div>
+          <div class="legend-row"><span class="dot" style="background:var(--amber);"></span><span class="lab">Parcial</span><span class="desc">Evidência incompleta · pontuação parcial</span></div>
+          <div class="legend-row"><span class="dot" style="background:var(--red);"></span><span class="lab">Ausente</span><span class="desc">Evidência ausente · não pontua</span></div>
+        </div>
+        <div class="col">
+          <div class="card" style="height:100%;">
+            <h3 style="color:var(--navy);">Pontuação e nível de risco aparente</h3>
+            <div class="risk-row"><span class="risk-bar" style="background:var(--red);"></span><span class="risk-range">0 – 39,9</span><span class="risk-label" style="color:var(--red);">Alto</span><span class="risk-desc">Muitos elementos essenciais ausentes</span></div>
+            <div class="risk-row"><span class="risk-bar" style="background:var(--amber);"></span><span class="risk-range">40 – 69,9</span><span class="risk-label" style="color:var(--amber);">Médio</span><span class="risk-desc">Sinais positivos, faltam pontos importantes</span></div>
+            <div class="risk-row"><span class="risk-bar" style="background:var(--sage);"></span><span class="risk-range">70 – 89,9</span><span class="risk-label" style="color:var(--sage);">Baixo</span><span class="risk-desc">Boas práticas, ajustes pendentes</span></div>
+            <div class="risk-row"><span class="risk-bar" style="background:var(--teal-dark);"></span><span class="risk-range">90 – 100</span><span class="risk-label" style="color:var(--teal-dark);">Boas práticas</span><span class="risk-desc">Forte presença de boas práticas aparentes</span></div>
+            <p style="font-size:11px;font-style:italic;color:var(--teal-dark);margin-top:10px;">O risco é chamado de aparente: a ferramenta só analisa evidências públicas, sem acesso aos processos internos da empresa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ctx" style="margin-top:14px;">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+          Contexto: o risco real por trás do risco aparente
+        </div>
+        <p style="margin:0;">As infrações à LGPD podem gerar multa de até 2% do faturamento da empresa no Brasil, limitada a R$ 50 milhões por infração (Art. 52, II). Desde a conversão da ANPD em agência reguladora plena (Lei nº 15.352/2026), a fiscalização tornou-se mais ativa — o que reforça por que sinais de risco aparente merecem atenção precoce.</p>
+      </div>
+      <div class="footer"><span>LGPDoc — Matriz de critérios, estados e risco</span><span>10 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 11 — RELATÓRIO -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        <div><p class="kicker">RELATÓRIO</p><h1>O que o usuário recebe no final?</h1></div>
+      </div>
+      <p class="lede">Cada achado do relatório responde a quatro perguntas, conectando diagnóstico a aprendizado prático.</p>
+      <div class="grid4" style="margin-bottom:18px;">
+        <div class="card" style="text-align:left;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:24px;height:24px;color:var(--teal-dark);margin-bottom:8px;"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <div style="font-size:13px;font-weight:700;">O que foi encontrado?</div>
+          <div style="font-size:11px;color:var(--navy-soft);margin-top:4px;">A evidência concreta</div>
+        </div>
+        <div class="card amber" style="text-align:left;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:24px;height:24px;color:var(--amber);margin-bottom:8px;"><path d="M12 3l9 16H3l9-16z"/><path d="M12 10v4"/></svg>
+          <div style="font-size:13px;font-weight:700;">Por que isso importa?</div>
+          <div style="font-size:11px;color:var(--navy-soft);margin-top:4px;">O risco ou princípio relacionado</div>
+        </div>
+        <div class="card" style="text-align:left;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:24px;height:24px;color:var(--teal-dark);margin-bottom:8px;"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="14" y2="17"/></svg>
+          <div style="font-size:13px;font-weight:700;">Qual critério foi afetado?</div>
+          <div style="font-size:11px;color:var(--navy-soft);margin-top:4px;">Rastreabilidade com C01–C33</div>
+        </div>
+        <div class="card" style="text-align:left;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:24px;height:24px;color:var(--teal-dark);margin-bottom:8px;"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h10"/></svg>
+          <div style="font-size:13px;font-weight:700;">Como melhorar?</div>
+          <div style="font-size:11px;color:var(--navy-soft);margin-top:4px;">Diagnóstico em ação prática</div>
+        </div>
+      </div>
+      <div class="ctx">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+          Contexto: transparência como prática institucional
+        </div>
+        <p style="margin:0;">Essa estrutura de evidência + explicação + ação espelha um movimento mais amplo de transparência regulatória: em novembro de 2025, a própria ANPD lançou um Painel da Fiscalização, tornando públicos os processos de fiscalização em curso. O LGPDoc aplica essa mesma lógica de transparência baseada em evidências, em escala educacional.</p>
+        <div class="src">Fonte: ANPD, Painel da Fiscalização (nov/2025).</div>
+      </div>
+      <div class="footer"><span>LGPDoc — Relatório educativo e recomendações</span><span>11 / 12</span></div>
+    </section>
+
+    <!-- SLIDE 12 — DEMO, LIMITAÇÕES, IMPACTO, CONCLUSÃO -->
+    <section class="slide">
+      <div class="titlebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11l18-7-7 18-3-7-8-4z"/></svg>
+        <div><p class="kicker">ENCERRAMENTO</p><h1>Estado atual, limites e contribuição do projeto</h1></div>
+      </div>
+      <div class="grid3" style="margin-bottom:14px;">
+        <div class="card">
+          <h3>Demo atual</h3>
+          <ul class="bullets">
+            <li>Dados mockados e progresso simulado</li>
+            <li>Caso fictício: Clínica Horizonte Bem-Estar</li>
+            <li>Relatório completo, sem backend</li>
+          </ul>
+        </div>
+        <div class="card amber">
+          <h3>O que o LGPDoc não faz</h3>
+          <ul class="bullets">
+            <li>Certificação ou parecer jurídico</li>
+            <li>Acesso a áreas autenticadas</li>
+            <li>Pentest ou auditoria profunda</li>
+            <li>Avaliação definitiva de bases legais</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Impacto esperado</h3>
+          <ul class="bullets">
+            <li>Aumentar a conscientização sobre LGPD</li>
+            <li>Ajudar pequenas empresas a entender riscos</li>
+            <li>Apoiar aprendizado de estudantes</li>
+            <li>Incentivar práticas mais responsáveis</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ctx" style="margin-bottom:14px;">
+        <div class="lbl">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5a2 2 0 012-2h9l5 5v11a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M14 3v5h5"/></svg>
+          Contexto: por que o tema ganhou urgência em 2026
+        </div>
+        <p style="margin:0;">Em 2026, a ANPD tornou-se Agência Nacional de Proteção de Dados (Lei nº 15.352/2026), com autonomia financeira e estrutura própria de fiscalização. O Mapa de Temas Prioritários 2026–2027 da agência prevê dezenas de ações fiscalizatórias com foco em dados biométricos, de saúde, financeiros e de crianças e adolescentes — tornando ferramentas educativas como o LGPDoc cada vez mais relevantes.</p>
+      </div>
+      <div class="quote-card">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7c-2 0-3.5 1.5-3.5 3.5S5 14 7 14c.3 0 .6 0 .8-.1C7.3 16 5.8 17.5 4 18l.6 1.8C8 19 10 16 10 12.5 10 9.5 8.5 7 7 7zm10 0c-2 0-3.5 1.5-3.5 3.5S15 14 17 14c.3 0 .6 0 .8-.1-.5 2.1-2 3.6-3.8 4.1l.6 1.8c3.4-.8 5.4-3.8 5.4-7.3 0-3-1.5-5.5-3-5.5z"/></svg>
+        <p>O LGPDoc cria uma ponte entre a LGPD e a prática do desenvolvimento web: mostra que privacidade aparece em decisões concretas — quais campos um formulário pede, quais cookies são carregados, e se o usuário consegue entender e exercer seus direitos.</p>
+      </div>
+      <div class="footer"><span>LGPDoc — Demo, limitações, impacto e conclusão</span><span>12 / 12</span></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="nav-controls">
+  <button class="nav-btn" id="prevBtn" aria-label="Anterior">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">1 / 12</span>
+  <button class="nav-btn" id="nextBtn" aria-label="Próximo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  const dotsWrap = document.getElementById('dots');
+  for (let i = 0; i < total; i++) {
+    const b = document.createElement('button');
+    b.addEventListener('click', () => goTo(i));
+    dotsWrap.appendChild(b);
+  }
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    [...dotsWrap.children].forEach((d, i) => d.classList.toggle('on', i === current));
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+  }
+  function goTo(i) { current = Math.max(0, Math.min(total - 1, i)); render(); }
+  document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') goTo(current + 1);
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+  });
+  render();
+</script>
+
+</body>
+</html>

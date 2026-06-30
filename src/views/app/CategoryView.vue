@@ -17,7 +17,7 @@ const categorySubjects = computed(() => getSubjectsByCategory(String(route.param
     </div>
 
     <div v-if="categorySubjects.length" class="grid-section compact">
-      <RouterLink v-for="subject in categorySubjects" :key="subject.slug" class="card" :to="`/escola/${subject.slug}`">
+      <RouterLink v-for="subject in categorySubjects" :key="subject.slug" class="card" :to="`/${subject.category}/${subject.slug}`">
         <span class="card-label">{{ subject.period }}</span>
         <h2>{{ subject.title }}</h2>
         <p>{{ subject.description }}</p>

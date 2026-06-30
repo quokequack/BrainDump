@@ -11,12 +11,12 @@ export const router = createRouter({
     { path: '/', name: 'home', component: HomeView },
     { path: '/:category(trabalho|estudos|escola)', name: 'category', component: CategoryView },
     {
-      path: '/escola/:subject',
+      path: '/:category(trabalho|estudos|escola)/:subject',
       name: 'subject',
       component: SubjectView,
     },
     {
-      path: '/escola/:subject/:post',
+      path: '/:category(trabalho|estudos|escola)/:subject/:post',
       name: 'post',
       component: PostView,
     },

@@ -1,5 +1,6 @@
 import backupRecoveryOracle from './views/college/4p/banco-de-dados/backup-recovery-oracle.html?raw'
 import drpOracle from './views/college/4p/banco-de-dados/drp-oracle.html?raw'
+import lgpdocApresentacao from './views/college/4p/direito-digital/LGPDoc_apresentacao.html?raw'
 import segurancaBancoDados from './views/college/4p/banco-de-dados/seguranca-banco-dados.html?raw'
 import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recursos-profile.html?raw'
 import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo_ia_engenharia.html?raw'
@@ -78,6 +79,21 @@ export const categories: Category[] = [
 ]
 
 export const subjects: Subject[] = [
+  {
+    slug: 'direito-digital',
+    title: 'Direito Digital',
+    category: 'estudos',
+    period: '4o periodo',
+    description: 'Materiais sobre direito, privacidade e protecao de dados no ambiente digital.',
+    posts: [
+      {
+        slug: 'lgpdoc-apresentacao',
+        title: 'LGPDoc',
+        description: 'Apresentacao da plataforma de conformidade documental com a LGPD.',
+        html: lgpdocApresentacao,
+      },
+    ],
+  },
   {
     slug: 'banco-de-dados',
     title: 'Banco de Dados',
