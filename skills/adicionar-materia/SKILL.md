@@ -21,14 +21,16 @@ Inferir título, slug, período, descrição e conteúdo quando estiverem claros
 
 ## Fluxo
 
-1. Ler [references/padrao-banco-de-dados.md](references/padrao-banco-de-dados.md).
-2. Inspecionar `src/content.ts`, a pasta do período solicitado e pelo menos um HTML de `src/views/college/4p/banco-de-dados/`.
-3. Verificar se a matéria já existe em `subjects`.
-4. Criar a pasta `src/views/college/<periodo>/<slug-da-materia>/` quando necessário.
-5. Criar um HTML por conteúdo solicitado, seguindo o padrão de apresentação responsiva e interativa.
-6. Atualizar `src/content.ts` com imports `?raw`, a nova matéria e/ou os novos posts.
-7. Validar com `npm run typecheck`.
-8. Relatar os caminhos criados, a rota resultante e a validação executada.
+1. Ler `docs/specs/README.md`, `docs/content/college-content-guidelines.md` e `docs/content/html-slide-deck-standard.md`.
+2. Criar ou atualizar uma spec curta em `docs/specs/` quando a solicitação envolver nova matéria, novo conjunto de posts ou mudança estrutural.
+3. Inspecionar `src/content.ts`, a pasta do período solicitado e pelo menos um HTML de `src/views/college/4p/banco-de-dados/`.
+4. Verificar se a matéria já existe em `subjects`.
+5. Criar a pasta `src/views/college/<periodo>/<slug-da-materia>/` quando necessário.
+6. Criar um HTML por conteúdo solicitado, seguindo o padrão de apresentação responsiva e interativa.
+7. Atualizar `src/content.ts` com imports `?raw`, a nova matéria e/ou os novos posts.
+8. Validar com `npm run typecheck`.
+9. Atualizar a spec com decisões e validação executada.
+10. Relatar os caminhos criados, a rota resultante e a validação executada.
 
 ## Regras
 

@@ -1,5 +1,11 @@
 # Padrão de Banco de Dados
 
+Este arquivo foi mantido por compatibilidade com fluxos antigos. A fonte canônica atual é:
+
+- `docs/content/college-content-guidelines.md`
+- `docs/content/html-slide-deck-standard.md`
+- `docs/specs/README.md`
+
 ## Contrato de conteúdo
 
 `src/content.ts` é o catálogo que torna as matérias navegáveis.
