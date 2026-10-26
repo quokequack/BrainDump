@@ -5,16 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e87ad126-bd15-4baa-bb97-9429b989a099" name="Changes" comment="feat: reorganizacao dos slides de ihc">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/adicionar-materia.md" beforeDir="false" afterPath="$PROJECT_DIR$/agents/adicionar-materia.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/skills/adicionar-materia/SKILL.md" beforeDir="false" afterPath="$PROJECT_DIR$/skills/adicionar-materia/SKILL.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/skills/adicionar-materia/references/padrao-banco-de-dados.md" beforeDir="false" afterPath="$PROJECT_DIR$/skills/adicionar-materia/references/padrao-banco-de-dados.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/views/college/5p/tabd/revisao_topicos_avancados_bd.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/content.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="65" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -89,6 +90,7 @@
       <recent name="$PROJECT_DIR$/public/img" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/views/college/5p/tabd" />
       <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\gestao-de-pessoas-em-ti" />
       <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p\ihc" />
       <recent name="\\wsl.localhost\Ubuntu-22.04\home\alaquoke\projetos\pessoais\BrainDump\src\views\college\4p" />
@@ -98,7 +100,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-WS-261.24374.125" />
       </set>
     </attachedChunks>
   </component>
@@ -117,6 +119,7 @@
       <workItem from="1783436707063" duration="71000" />
       <workItem from="1783953201474" duration="1463000" />
       <workItem from="1783968135601" duration="1653000" />
+      <workItem from="1793046567601" duration="183000" />
     </task>
     <task id="LOCAL-00001" summary="feat: skills e slide de gestao">
       <option name="closed" value="true" />

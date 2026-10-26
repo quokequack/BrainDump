@@ -21,6 +21,15 @@ CREATE TABLE Pedido (
 <section id="roteiro"><h2>Roteiro rápido de revisão</h2><ol><li><b>20 minutos — EDA:</b> variáveis, estatísticas, gráficos, quartis e dispersão.</li><li><b>25 minutos — Orange:</b> widgets, transformações, modelos e avaliação.</li><li><b>10 minutos — SMART:</b> letras, metas, KPIs e gap.</li><li><b>10 minutos — Data Modeler:</b> chaves, restrições, schema, índices e tablespace.</li><li><b>15 minutos — Simulado:</b> faça as 20 questões e volte aos erros.</li></ol><h3>Fórmulas essenciais</h3><div class="tablewrap"><table><tr><th>Conceito</th><th>Fórmula</th></tr><tr><td>Média</td><td>Σxᵢ/n</td></tr><tr><td>Amplitude</td><td>máximo − mínimo</td></tr><tr><td>CV</td><td>desvio padrão / média × 100%</td></tr><tr><td>Conversão</td><td>pedidos / sessões × 100%</td></tr><tr><td>Precision</td><td>VP/(VP+FP)</td></tr><tr><td>Recall</td><td>VP/(VP+FN)</td></tr><tr><td>Accuracy</td><td>(VP+VN)/(VP+VN+FP+FN)</td></tr><tr><td>F1</td><td>2 × Precision × Recall / (Precision+Recall)</td></tr><tr><td>RMSE</td><td>√MSE</td></tr></table></div><p class="muted">Nota sobre os slides: o material possui algumas simplificações e possíveis lapsos de terminologia. Esta revisão mantém a estrutura dos quatro temas e acrescenta exemplos didáticos; os exemplos inventados não são resultados reais de datasets dos PDFs.</p></section>
 </main></div><footer>Apostila de estudo · Tópicos Avançados em Banco de Dados · Funciona offline</footer>
 <script>
+// Mantém os atalhos no próprio documento ao renderizar com iframe srcdoc.
+document.querySelectorAll('aside a[href^="#"]').forEach(link => {
+  link.addEventListener('click', event => {
+    const section = document.getElementById(link.getAttribute('href').slice(1));
+    if (!section) return;
+    event.preventDefault();
+    section.scrollIntoView();
+  });
+});
 const questions=[
 ['Qual é a principal função de uma chave estrangeira?',['Identificar unicamente cada linha','Estabelecer referência entre tabelas','Armazenar índices','Impedir todos os valores nulos'],1,'A FK mantém uma referência a uma chave válida da tabela relacionada.'],
 ['No Data Modeler, qual conceito está ligado à organização lógica do armazenamento Oracle?',['CHECK','View','Tablespace','Target'],2,'Tablespace é uma unidade lógica de armazenamento do Oracle Database.'],

@@ -6,6 +6,7 @@ import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recu
 import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo_ia_engenharia.html?raw'
 import apresentacaoAcessibilidade from './views/college/4p/ihc/apresentacao_acessibilidade.html?raw'
 import ihcPrototipo from './views/college/4p/ihc/ihc-prototipo/index.html?raw'
+import revisaoTopicosAvancadosBd from './views/college/5p/tabd/revisao_topicos_avancados_bd.html?raw'
 import knowlyAlertaTipografia from './views/college/4p/ihc/ihc-prototipo/img/alerta-tipografia.png?url'
 import knowlyAttendanceBadge from './views/college/4p/ihc/ihc-prototipo/img/attendance-badge.png?url'
 import knowlyBlurEffect from './views/college/4p/ihc/ihc-prototipo/img/blur-effect.png?url'
@@ -79,6 +80,21 @@ export const categories: Category[] = [
 ]
 
 export const subjects: Subject[] = [
+  {
+    slug: 'tabd',
+    title: 'Tópicos Avançados em Banco de Dados',
+    category: 'escola',
+    period: '5o periodo',
+    description: 'Materiais sobre modelagem de bancos de dados, metas SMART, análise exploratória e mineração de dados.',
+    posts: [
+      {
+        slug: 'revisao-topicos-avancados-bd',
+        title: 'Revisão de Tópicos Avançados em Banco de Dados',
+        description: 'Revisão de SQL Data Modeler, metas SMART, EDA e Orange Data Mining, com simulado interativo de 20 questões.',
+        html: revisaoTopicosAvancadosBd,
+      },
+    ],
+  },
   {
     slug: 'direito-digital',
     title: 'Direito Digital',
