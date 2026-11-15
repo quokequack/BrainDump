@@ -6,6 +6,7 @@ import senhasRecursosProfile from './views/college/4p/banco-de-dados/senhas-recu
 import paradoxoIaEngenharia from './views/college/4p/gestao-de-pessoas-em-ti/paradoxo_ia_engenharia.html?raw'
 import apresentacaoAcessibilidade from './views/college/4p/ihc/apresentacao_acessibilidade.html?raw'
 import ihcPrototipo from './views/college/4p/ihc/ihc-prototipo/index.html?raw'
+import apresentacaoTabd from './views/college/5p/tabd/apresentacao-tabd.html?raw'
 import revisaoTopicosAvancadosBd from './views/college/5p/tabd/revisao_topicos_avancados_bd.html?raw'
 import knowlyAlertaTipografia from './views/college/4p/ihc/ihc-prototipo/img/alerta-tipografia.png?url'
 import knowlyAttendanceBadge from './views/college/4p/ihc/ihc-prototipo/img/attendance-badge.png?url'
@@ -92,6 +93,12 @@ export const subjects: Subject[] = [
         title: 'Revisão de Tópicos Avançados em Banco de Dados',
         description: 'Revisão de SQL Data Modeler, metas SMART, EDA e Orange Data Mining, com simulado interativo de 20 questões.',
         html: revisaoTopicosAvancadosBd,
+      },
+      {
+        slug: 'apresentacao-tabd',
+        title: 'One Piece × V-Dem — Apresentação TABD',
+        description: 'Apresentação do Data Warehouse que relaciona temas de One Piece a indicadores sociopolíticos do V-Dem.',
+        html: apresentacaoTabd,
       },
     ],
   },

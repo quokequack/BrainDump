@@ -5,8 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e87ad126-bd15-4baa-bb97-9429b989a099" name="Changes" comment="feat: reorganizacao dos slides de ihc">
-      <change afterPath="$PROJECT_DIR$/src/views/college/5p/tabd/revisao_topicos_avancados_bd.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/material_theme_project_new.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/views/college/5p/tabd/apresentacao-tabd.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/content.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/content.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -15,7 +14,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="65" />
+    <option name="cachedIndexableFilesCount" value="67" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -120,6 +119,7 @@
       <workItem from="1783953201474" duration="1463000" />
       <workItem from="1783968135601" duration="1653000" />
       <workItem from="1793046567601" duration="183000" />
+      <workItem from="1794785235873" duration="352000" />
     </task>
     <task id="LOCAL-00001" summary="feat: skills e slide de gestao">
       <option name="closed" value="true" />
